@@ -1,0 +1,20 @@
+<launch>
+  <arg name="ns"           default="rgb0"/>
+  <arg name="x"            default="0"/>
+  <arg name="y"            default="0"/>
+  <arg name="z"            default="0"/>
+  <arg name="roll"         default="0"/>
+  <arg name="pitch"        default="0"/>
+  <arg name="yaw"          default="0"/>
+  <arg name="floorheight" default="0.5"/>
+
+  <param name="/$(arg ns)/robot_description" command="$(find xacro)/xacro --inorder $(find coslam)/gazebo/models/rgbd_camera/r200.urdf.xacro  namespace:=$(arg ns) offset_px:=$(arg x) offset_py:=$(arg y) floor_height:=$(arg floorheight) offset_pz:=$(arg z) offset_r:=$(arg roll) offset_p:=$(arg pitch) offset_y:=$(arg yaw) " />
+
+  <node pkg="gazebo_ros" type="spawn_model" name="spawn_urdf" ns="$(arg ns)" args="-urdf -param /$(arg ns)/robot_description -model $(arg ns) -param /$(arg ns)/robot_description"/>
+
+  <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher" ns="$(arg ns)">
+    <param name="tf_prefix"         value="$(arg ns)"/>
+    <param name="publish_frequency" type="double" value="30.0" />
+  </node>
+
+</launch>
