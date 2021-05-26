@@ -1,0 +1,8 @@
+*/build/
+deps/
+.project
+.cproject
+*.user
+cmake-build-debug/*
+*/OpenNI2
+

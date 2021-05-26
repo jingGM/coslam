@@ -33,7 +33,7 @@
 #include "Ferns.h"
 #include "PoseMatch.h"
 #include "Defines.h"
-
+#include <memory>
 #include <iomanip>
 #include <pangolin/gl/glcuda.h>
 
@@ -326,5 +326,5 @@ class ElasticFusion
         bool frameToFrameRGB;
         float depthCutoff;
 };
-
+typedef std::shared_ptr<ElasticFusion> ElasticFusionPtr;
 #endif /* ELASTICFUSION_H_ */

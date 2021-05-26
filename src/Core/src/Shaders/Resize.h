@@ -56,5 +56,5 @@ class Resize
         pangolin::GlRenderBuffer timeRenderBuffer;
         pangolin::GlFramebuffer timeFrameBuffer;
 };
-
+typedef std::shared_ptr<Resize> ResizePtr;
 #endif /* RESIZE_H_ */

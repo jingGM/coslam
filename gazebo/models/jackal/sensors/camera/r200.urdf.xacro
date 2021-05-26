@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 
 <robot name="sensor_r200" xmlns:xacro="http://ros.org/wiki/xacro">
-  <xacro:include filename="$(find oforca)/gazebo/models/jackal/sensors/camera/common_properties.urdf.xacro"/>
+  <xacro:include filename="$(find coslam)/gazebo/models/jackal/sensors/camera/common_properties.urdf.xacro"/>
 
 
   
@@ -46,7 +46,7 @@
     <visual>
        <origin xyz="${-r200_bracket_end_width/2} ${r200_bracket_end_offset_py} ${r200_bracket_end_offset_pz}" rpy="0 0 ${-M_PI/2}"/>
         <geometry>
-         <mesh filename="$(find oforca)/gazebo/models/jackal/sensors/camera/meshes/sensors/r200_bracket_end.stl" scale="0.001 0.001 0.001"/>
+         <mesh filename="$(find coslam)/gazebo/models/jackal/sensors/camera/meshes/sensors/r200_bracket_end.stl" scale="0.001 0.001 0.001"/>
         </geometry>
         <xacro:insert_block name="material_dark_grey" />
       </visual>
@@ -62,7 +62,7 @@
     <visual>
        <origin xyz="0 0 0" rpy="0 0 ${M_PI/2}"/>
         <geometry>
-         <mesh filename="$(find oforca)/gazebo/models/jackal/sensors/camera/meshes/sensors/r200_bracket.stl" scale="0.001 0.001 0.001"/>
+         <mesh filename="$(find coslam)/gazebo/models/jackal/sensors/camera/meshes/sensors/r200_bracket.stl" scale="0.001 0.001 0.001"/>
         </geometry>
         <xacro:insert_block name="material_dark_grey" />
       </visual>
@@ -78,7 +78,7 @@
     <visual>
        <origin xyz="${r200_bracket_end_width/2} 0 ${-r200_bracket_end_offset_pz}" rpy="0 0 ${M_PI/2}"/>
         <geometry>
-         <mesh filename="$(find oforca)/gazebo/models/jackal/sensors/camera/meshes/sensors/r200_bracket_end.stl" scale="0.001 0.001 0.001"/>
+         <mesh filename="$(find coslam)/gazebo/models/jackal/sensors/camera/meshes/sensors/r200_bracket_end.stl" scale="0.001 0.001 0.001"/>
         </geometry>
         <xacro:insert_block name="material_dark_grey" />
       </visual>
@@ -94,7 +94,7 @@
       <visual>
        <origin xyz="0 0 0" rpy="${M_PI/2} 0 ${M_PI/2}"/>
         <geometry>
-         <mesh filename="$(find oforca)/gazebo/models/jackal/sensors/camera/meshes/sensors/r200.dae" />
+         <mesh filename="$(find coslam)/gazebo/models/jackal/sensors/camera/meshes/sensors/r200.dae" />
         </geometry>
       </visual>
       <collision>
