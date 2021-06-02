@@ -133,11 +133,6 @@
     </joint>
     <link name="camera_rgb_optical_frame"/>
     
-  
-
-    <!--
-    ==  Depth joints & links ==
-    -->
 
     <joint name="camera_depth_joint" type="fixed">
         <origin xyz="0 ${r200_cam_depth_offset} 0" rpy="0 0 0" />
@@ -164,11 +159,12 @@
         <always_on>true</always_on>
         <update_rate>60.0</update_rate>
         <camera>
-          <horizontal_fov>1.22173</horizontal_fov>
+          <horizontal_fov>1.0897278309030873</horizontal_fov>
+          <!-- <horizontal_fov>1.22173</horizontal_fov> -->
           <image>
-            <format>B8G8R8</format>
+            <format>R8G8B8</format>
             <width>640</width>
-            <height>448</height>
+            <height>480</height>
           </image>
           <clip>
             <near>0.1</near>

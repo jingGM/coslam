@@ -1,8 +1,12 @@
-*/build/
+build/*
+*/build/*
 deps/
 .project
 .cproject
 *.user
 cmake-build-debug/*
-*/OpenNI2
-
+*/cmake-build-debug/*
+OpenNI2/*
+OpenNI2
+dataset/*
+.idea/*

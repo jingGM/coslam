@@ -8,6 +8,7 @@
 #include "ros/ros.h"
 #include <sstream>
 #include<string>
+#include <thread>
 
 #include "std_msgs/String.h"
 #include "sensor_msgs/Image.h"
@@ -40,6 +41,7 @@ struct TopicNames {
 };
 
 
+
 class rosInterface {
 private:
     ros::NodeHandle n;
@@ -48,19 +50,18 @@ private:
     dataInterfacePtr dataInferPtr;
 
     int cameraNum = 0;
+    void ros_total_spin() {ros::spin();}
 
     ros::Subscriber subDepth, subRGB, subOdom, subRGBCameraInfo;
     std::vector<ros::Subscriber> surveillanceSubscribers={};
 
     ros::Publisher pub = n.advertise<geometry_msgs::Twist>(topicNames.actionTopic, 5);
-    ros::Publisher pub1 = n.advertise<sensor_msgs::Image>(topicNames.testTopic, 5);
+//    ros::Publisher pub1 = n.advertise<sensor_msgs::Image>(topicNames.testTopic, 5);
+    std::thread rosThread;
 
 public:
-    explicit rosInterface(const dataInterfacePtr& dataIfPtr, const int& surveillanceNumber);
-//    explicit rosInterface(const int& surveillanceNumber);
-
-//    sensor_msgs::Image getRGB();
-//    sensor_msgs::CameraInfo getRGBCameraInfo();
+    explicit rosInterface(dataInterfacePtr  dataIfPtr, const int& surveillanceNumber);
+    ~rosInterface();
 };
 
 typedef std::shared_ptr<rosInterface> rosInterfacePtr;

@@ -82,6 +82,14 @@ Install code
 
 
 ## Run
+Run existing file
+```
+ros_efusion -l DIR_TO_COSLAM/coslam/dataset/dyson_lab.klg
+```
+Run simulation
+```
+ros_efusion -lm simulation
+```
 
 #### run gazebo
 ```

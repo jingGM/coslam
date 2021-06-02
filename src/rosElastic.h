@@ -16,6 +16,7 @@
 #include "Tools/GroundTruthOdometry.h"
 #include "Tools/RawLogReader.h"
 #include "Tools/LiveLogReader.h"
+#include "Tools/ROSLogReader.h"
 //#include "GUI/src/MainController.h"
 
 class rosElastic {
@@ -43,6 +44,7 @@ private:
 
     bool iclnuim;
     std::string logFile;
+    std::string logMode;
     std::string poseFile;
 
     float confidence,

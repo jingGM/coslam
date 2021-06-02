@@ -60,9 +60,6 @@ include_directories(
         ${OpenCV_INCLUDE_DIRS}
 )
 
-#add_executable(ros_interface src/rosinterface/RosFunctions.cpp ${INTERFACE})
-#target_link_libraries(ros_interface ${catkin_LIBRARIES} ${Boost_LIBRARIES})
-
 add_executable(ros_efusion src/rosEfusion.cpp
                         ${INTERFACE}
                         ${ROSELASTIC}
@@ -82,13 +79,18 @@ target_link_libraries(ros_efusion
                         ${LAPACK_LIBRARIES}
                         )
 
-add_executable(test_logreader src/test/rawlogreader.cpp ${tools})
-target_link_libraries(test_logreader
-                        ${Pangolin_LIBRARIES}
-                        ${EXTRA_LIBS}
-                        ${EFUSION_LIBRARY}
-                        ${CUDA_LIBRARIES}
-                        ${OPENNI2_LIBRARY}
-                        ${SUITESPARSE_LIBRARIES}
-                        ${LAPACK_LIBRARIES}
-        )
+#add_executable(test_logreader src/test/logreader.cpp ${tools} ${INTERFACE})
+#target_link_libraries(test_logreader
+#                        ${Pangolin_LIBRARIES}
+#                        ${EXTRA_LIBS}
+#                        ${EFUSION_LIBRARY}
+#                        ${CUDA_LIBRARIES}
+#                        ${OPENNI2_LIBRARY}
+#                        ${SUITESPARSE_LIBRARIES}
+#                        ${LAPACK_LIBRARIES}
+#                        ${catkin_LIBRARIES}
+#                        ${Boost_LIBRARIES}
+#        )
+
+add_executable(test_rosinterface src/test/rosinterface.cpp ${INTERFACE})
+target_link_libraries(test_rosinterface ${catkin_LIBRARIES} ${Boost_LIBRARIES})

@@ -8,9 +8,9 @@ rosElastic::rosElastic(int argc, char **argv): good(true),
                                                framesToSkip(0),
                                                resetButton(false) {
 
-//    ros::init(argc, argv, "ros_efusion");
-//    dataInferPtr = std::make_shared<DataInterface>(4);
-//    rosInterPtr = std::make_shared<rosInterface>(dataInferPtr, 4);
+    ros::init(argc, argv, "ros_efusion");
+    dataInferPtr = std::make_shared<DataInterface>(4);
+    rosInterPtr = std::make_shared<rosInterface>(dataInferPtr, 4);
 
     Resolution::getInstance(640, 480);
     Intrinsics::getInstance(528, 528, 320, 240);
@@ -43,6 +43,7 @@ rosElastic::rosElastic(int argc, char **argv): good(true),
     Parse::get().arg(argc, argv, "-s", start);
     Parse::get().arg(argc, argv, "-e", end);
     Parse::get().arg(argc, argv, "-l", logFile);
+    Parse::get().arg(argc, argv, "-lm", logMode);
 
     flipColors = Parse::get().arg(argc,argv,"-f",empty) > -1;
     openLoop = !groundTruthOdometry && Parse::get().arg(argc, argv, "-o", empty) > -1;
@@ -66,11 +67,18 @@ rosElastic::rosElastic(int argc, char **argv): good(true),
 }
 
 void rosElastic::initializeLogger() {
-    if(logFile.length()) {
-        logReader = std::make_shared<RawLogReader>(logFile, flipColors);
-    } else {
-        logReader = std::make_shared<LiveLogReader>(logFile, flipColors, LiveLogReader::CameraType::OpenNI2);
-        good = std::dynamic_pointer_cast<LiveLogReader>(logReader)->cam->ok();
+    if (logMode=="simulation")
+    {
+        logReader = std::make_shared<ROSLogReader>(logFile, flipColors, dataInferPtr);
+    }
+    else
+    {
+        if(logFile.length()) {
+            logReader = std::make_shared<RawLogReader>(logFile, flipColors);
+        } else {
+            logReader = std::make_shared<LiveLogReader>(logFile, flipColors, LiveLogReader::CameraType::OpenNI2);
+            good = std::dynamic_pointer_cast<LiveLogReader>(logReader)->cam->ok();
+        }
     }
     logReader->rewind();
 }
@@ -170,7 +178,7 @@ void rosElastic::run() {
                 }
 
                 eFusion->processFrame(logReader->rgb, logReader->depth, logReader->timestamp, currentPose, weightMultiplier);
-                std::cout<<"current time: "<<logReader->timestamp<<std::endl;
+//                std::cout<<"current time: "<<logReader->timestamp<<std::endl;
                 if(currentPose)
                 {
                     delete currentPose;

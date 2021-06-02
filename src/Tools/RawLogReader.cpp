@@ -93,6 +93,9 @@ void RawLogReader::getCore()
         uncompress(&decompressionBufferDepth[0], (unsigned long *)&decompLength, (const Bytef *)depthReadBuffer, depthSize);
     }
 
+//    auto dpeth_image = &decompressionBufferDepth[0];
+//    std::cout << "show depth decomp" << std::endl;
+
     if(imageSize == numPixels * 3)
     {
         memcpy(&decompressionBufferImage[0], imageReadBuffer, numPixels * 3);
@@ -108,6 +111,10 @@ void RawLogReader::getCore()
 
     depth = (unsigned short *)decompressionBufferDepth;
     rgb = (unsigned char *)&decompressionBufferImage[0];
+
+//    auto depth_image_depth = *depth;
+//    auto rgb_image = *rgb;
+//    std::cout << "show depth" << std::endl;
 
     if(flipColors)
     {
