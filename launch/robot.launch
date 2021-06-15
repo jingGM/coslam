@@ -1,0 +1,27 @@
+<launch>
+  <arg name="ns"           default="robot"/>
+  <arg name="x"            default="0"/>
+  <arg name="y"            default="0"/>
+  <arg name="z"            default="0"/>
+  <arg name="floorheight" default="0.5"/>
+
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="world_name" value="$(find turtlebot3_gazebo)/worlds/empty.world"/>
+    <arg name="paused" value="true"/>
+    <arg name="use_sim_time" value="true"/>
+    <arg name="gui" value="true"/>
+    <arg name="headless" value="false"/>
+    <arg name="debug" value="false"/>
+  </include>
+
+  <param name="robot_description" command="$(find xacro)/xacro --inorder $(find coslam)/gazebo/models/holonomic_robot/model.urdf.xacro" />
+   <!-- namespace:=$(arg ns) -->
+  <node pkg="gazebo_ros" type="spawn_model" name="spawn_urdf"  args="-urdf -model $(arg ns) -x $(arg x) -y $(arg y) -z $(arg z) -param robot_description" />
+  <!-- ns="$(arg ns)" -->
+
+  <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher" ns="$(arg ns)">
+    <param name="tf_prefix"         value="$(arg ns)"/>
+    <param name="publish_frequency" type="double" value="30.0" />
+  </node>
+
+</launch>

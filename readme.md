@@ -6,7 +6,7 @@ follow the file ubuntu18.sh
 #### setup gazebo
 ```
 	mkdir -p ~/Documents/catkin/src && cd ~/Documents/catkin/src
-	git clone xxxxxxxxxxxxxxxxxxxxxxxxx
+	git clone https://github.com/jingGM/coslam.git
 	cd coslam
 	export GAZEBO_MODEL_PATH=$PWD/gazebo/models:$GAZEBO_MODEL_PATH
 
@@ -34,7 +34,7 @@ Install cuda
 
 Install other dependencies
 ```
-sudo apt-get install -y cmake-qt-gui git build-essential libusb-1.0-0-dev libudev-dev openjdk-11-* freeglut3-dev libglew-dev libsuitesparse-dev libeigen3-dev zlib1g-dev libjpeg-dev
+sudo apt-get install -y cmake-qt-gui git build-essential libusb-1.0-0-dev libudev-dev openjdk-11-* freeglut3-dev libglew-dev libsuitesparse-dev libeigen3-dev zlib1g-dev libjpeg-dev ros-melodic-jackal*
 ```
 	
 Install pangolin
@@ -63,16 +63,6 @@ Install OPENNI2
 Install code
 ```
 	cd ../Core
-	mkdir build
-	cd build
-	cmake ../src
-	make -j8
-	cd ../../GPUTest
-	mkdir build
-	cd build
-	cmake ../src
-	make -j8
-	cd ../../GUI
 	mkdir build
 	cd build
 	cmake ../src
