@@ -83,8 +83,14 @@ ros_efusion -lm simulation
 
 #### run gazebo
 ```
-	roslaunch coslam world.launch
-
+	roslaunch coslam world_jackal.launch
+	
 	conda deactivate
 	rosrun teleop_twist_keyboard teleop_twist_keyboard.py cmd_vel:=/jackal/jackal_velocity_controller/cmd_vel
+```
+```
+  roslaunch coslam world_robot.launch
+
+  conda deactivate
+	rosrun teleop_twist_keyboard teleop_twist_keyboard.py
 ```
