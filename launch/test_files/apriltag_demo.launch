@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<launch>
+  <!-- simple demo of apriltag_marker objects in rviz and Gazebo.
+  -->
+
+  <arg name="x" default="0" />
+  <arg name="y" default="0" />
+  <arg name="z" default="0.01" />
+
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="world_name" value="$(find turtlebot3_gazebo)/worlds/empty.world"/>
+    <arg name="paused" value="true"/>
+    <arg name="use_sim_time" value="true"/>
+    <arg name="gui" value="true"/>
+    <arg name="headless" value="false"/>
+    <arg name="debug" value="false"/>
+  </include>
+
+
+  <param name="robot_description" command="$(find xacro)/xacro --inorder $(find coslam)/gazebo/models/robot/tag.xacro" />
+  <node name="spawn_apriltag_demo" pkg="gazebo_ros" type="spawn_model" 
+        args="-urdf -param robot_description -x 0 -y 0 -z 0 -R 0 -P 0 -Y 0 -model apriltags" 
+        respawn="false" output="screen" />
+
+  
+
+
+
+</launch>

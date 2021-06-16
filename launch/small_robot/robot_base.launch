@@ -1,0 +1,23 @@
+<launch>
+  <arg name="ns"            default="robot"/>
+  <arg name="x_pos"         default="0"/>
+  <arg name="y_pos"         default="0"/>
+  <arg name="z_pos"         default="0"/>
+  <arg name="yaw"           default="0"/>
+  <arg name="cam_px"        default="0"/>
+  <arg name="cam_py"        default="0"/>
+  <arg name="cam_pz"        default="3"/>
+  <arg name="tag_name"      default="tag36_11_00001"/>
+  <!-- <arg name="imu_visual"    default="true"> -->
+  
+
+  <param name="robot_description" command="$(find xacro)/xacro --inorder $(find coslam)/gazebo/models/robot/model.xacro cam_px:=$(arg cam_px) cam_py:=$(arg cam_py) cam_pz:=$(arg cam_pz) tag_name:=$(arg tag_name)" />
+
+  <node pkg="gazebo_ros" type="spawn_model" name="spawn_urdf" args="-urdf -model turtlebot3 -x $(arg x_pos) -y $(arg y_pos) -z $(arg z_pos) -Y $(arg yaw) -param robot_description" />
+
+  <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher" ns="$(arg ns)">
+    <!-- <param name="tf_prefix"         value="$(arg ns)"/> -->
+    <param name="publish_frequency" type="double" value="30.0" />
+  </node>
+
+</launch>
