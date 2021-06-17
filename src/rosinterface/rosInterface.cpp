@@ -11,6 +11,7 @@ rosInterface::rosInterface(dataInterfacePtr  dataIfPtr,const int &surveillanceNu
     subRGB = n.subscribe(topicNames.rgbImageTopic, 1000, &DataInterface::robotRGBCallback, dataInferPtr.get());
     subRGBCameraInfo = n.subscribe(topicNames.rgbCameraInfoTopic, 1000, &DataInterface::robotCameraInfo, dataInferPtr.get());
     subOdom = n.subscribe(topicNames.odometryTopic, 1000, &DataInterface::robotOdomCallback, dataInferPtr.get());
+    subImu = n.subscribe(topicNames.imuTopic, 1000, &DataInterface::robotIMUCallback, dataInferPtr.get());
 
     topicNames.setSurveillanceCameras(surveillanceNumber);
     for(int i=0; i< surveillanceNumber; i++) {

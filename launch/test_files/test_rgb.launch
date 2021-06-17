@@ -1,9 +1,13 @@
 <launch>
+  <arg name="PI"  default="3.14"/>
+  <arg name="PI_2"  default="1.57"/>
+  <arg name="PI_4"  default="0.7854"/>
+
   <arg name="gui" default="true"/>
 
   <include file="$(find gazebo_ros)/launch/empty_world.launch">
     <!-- <arg name="world_name" value="$(find coslam)/gazebo/worlds/no_roof_small_warehouse.world"/> -->
-    <arg name="paused" default="false"/>
+    <arg name="paused" default="true"/>
     <arg name="use_sim_time" default="true"/>
     <arg name="gui" default="$(arg gui)"/>
     <arg name="headless" default="false"/>
@@ -14,14 +18,15 @@
   <arg name="ns0"        default="rgb0"/>
   <include file="$(find coslam)/launch/rgb.launch">
     <arg name="ns"           value="$(arg ns0)"/>
-    <arg name="x"            value="2"/>
-    <arg name="y"            value="2"/>
-    <arg name="z"            value="5"/>
-    <arg name="roll"         value="1.57"/>
-    <arg name="pitch"        value="1.57"/>
-    <!-- <arg name="yaw"        value="3.14"/> -->
-    <arg name="floorheight" value="0.5"/>
+    <arg name="x"            value="-1.5"/>
+    <arg name="y"            value="4"/>
+    <arg name="z"            value="1"/>
+    <arg name="cam_roll"     value="0"/>
+    <arg name="cam_pitch"    value="$(arg PI_4)"/>
+    <arg name="cam_yaw"      value="0"/>
+    <arg name="base_yaw"     value="-$(arg PI_4)"/>
   </include>
+  <!-- 0.7854 -->
 
   <!-- <arg name="ns1"        default="rgb1"/>
   <include file="$(find coslam)/launch/rgb.launch">

@@ -22,11 +22,12 @@
 #include "dataInterface.h"
 
 struct TopicNames {
-    std::string rgbImageTopic = "/jackal/camera/image_raw";
-    std::string rgbCameraInfoTopic = "/jackal/camera/camera_info";
-    std::string depthImageTopic = "/jackal/camera/depth/image_raw";
-    std::string odometryTopic = "/jackal/jackal_velocity_controller/odom";
-    std::string actionTopic = "/jackal/jackal_velocity_controller/cmd_vel";
+    std::string rgbImageTopic = "/camera/image_raw";
+    std::string rgbCameraInfoTopic = "/camera/camera_info";
+    std::string depthImageTopic = "/camera/depth/image_raw";
+    std::string odometryTopic = "/odom";
+    std::string actionTopic = "/cmd_vel";
+    std::string imuTopic = "/imu";
 
     std::vector<std::string> surveillanceTopics = {};
 
@@ -52,7 +53,7 @@ private:
     int cameraNum = 0;
     void ros_total_spin() {ros::spin();}
 
-    ros::Subscriber subDepth, subRGB, subOdom, subRGBCameraInfo;
+    ros::Subscriber subDepth, subRGB, subOdom, subImu, subRGBCameraInfo;
     std::vector<ros::Subscriber> surveillanceSubscribers={};
 
     ros::Publisher pub = n.advertise<geometry_msgs::Twist>(topicNames.actionTopic, 5);

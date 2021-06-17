@@ -25,6 +25,10 @@ void DataInterface::robotCameraInfo(const sensor_msgs::CameraInfo &data) {
     rgbCameraInfo = data;
 }
 
+void DataInterface::robotIMUCallback(const sensor_msgs::Imu &data) {
+    imu = data;
+}
+
 void DataInterface::robotOdomCallback(const nav_msgs::Odometry &data) {
     odom = data;
 }
@@ -128,10 +132,24 @@ std::vector<double> DataInterface::getOdom() {
     return {odom.twist.twist.linear.x, odom.twist.twist.angular.z};
 }
 
+std::vector<double> DataInterface::getImu() {
+    double heading = std::atan2(2*imu.orientation.y*imu.orientation.w-2*imu.orientation.x*imu.orientation.z ,
+                           1 - 2*imu.orientation.y*imu.orientation.y - 2*imu.orientation.z*imu.orientation.z);
+    double attitude = std::asin(2*imu.orientation.x*imu.orientation.y + 2*imu.orientation.z*imu.orientation.w);
+    double bank = std::atan2(2*imu.orientation.x*imu.orientation.w-2*imu.orientation.y*imu.orientation.z ,
+                 1 - 2*imu.orientation.x*imu.orientation.x - 2*imu.orientation.z*imu.orientation.z);
+
+    return {heading, attitude, bank,
+            imu.angular_velocity.x, imu.angular_velocity.y, imu.angular_velocity.z,
+            imu.linear_acceleration.x, imu.linear_acceleration.y, imu.linear_acceleration.z};
+}
+
+
 bool DataInterface::dataReady() const {
     auto rate = ros::Rate(10);
-    while (rgb.height==0 or depth.height==0 or odom.header.seq==0) {
+    while (rgb.height==0 or depth.height==0 or odom.header.seq==0 or imu.header.seq==0) {
         std::cout<<"waiting for data "<<std::endl;
         rate.sleep();
     }
 }
+

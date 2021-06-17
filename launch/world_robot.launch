@@ -1,4 +1,9 @@
 <launch>
+  <arg name="PI"  default="3.14"/>
+  <arg name="PI_2"  default="1.57"/>
+  <arg name="PI_4_3"  default="2.3562"/>
+  <arg name="PI_4"  default="0.7854"/>
+
   <arg name="gui" default="true"/>
 
   <include file="$(find gazebo_ros)/launch/empty_world.launch">
@@ -23,12 +28,13 @@
   <arg name="ns0"        default="rgb0"/>
   <include file="$(find coslam)/launch/rgb.launch">
     <arg name="ns"           value="$(arg ns0)"/>
-    <arg name="x"            value="5"/>
-    <arg name="y"            value="5"/>
-    <arg name="z"            value="10"/>
-    <arg name="roll"         value="1.57"/>
-    <arg name="pitch"        value="1.57"/>
-    <arg name="floorheight" value="0.5"/>
+    <arg name="x"            value="4.6"/>
+    <arg name="y"            value="10"/>
+    <arg name="z"            value="7"/>
+    <arg name="cam_roll"     value="0"/>
+    <arg name="cam_pitch"    value="$(arg PI_4)"/>
+    <arg name="cam_yaw"      value="0"/>
+    <arg name="base_yaw"     value="-$(arg PI_4_3)"/>
   </include>
 
   <!-- <arg name="ns1"        default="rgb1"/>

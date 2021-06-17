@@ -35,7 +35,6 @@ find_package(CUDA REQUIRED)
 find_package(OpenNI2 REQUIRED)
 find_package(SuiteSparse REQUIRED)
 find_package(efusion REQUIRED)
-#add_subdirectory(./src/Core/src)
 
 include_directories(${ZLIB_INCLUDE_DIR})
 include_directories(${EIGEN_INCLUDE_DIRS})
