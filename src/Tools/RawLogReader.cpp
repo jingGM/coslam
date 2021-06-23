@@ -57,7 +57,7 @@ void RawLogReader::getBack()
     getCore();
 }
 
-void RawLogReader::getNext()
+void RawLogReader::getNext(bool gRGB)
 {
     filePointers.push(ftell(fp));
 

@@ -45,7 +45,7 @@ class LiveLogReader : public LogReader
 
 		virtual ~LiveLogReader();
 
-        void getNext();
+        void getNext(bool gRGB=false);
 
         int getNumFrames();
 

@@ -40,7 +40,7 @@ class RawLogReader : public LogReader
 
         virtual ~RawLogReader();
 
-        void getNext();
+        void getNext(bool gRGB=false);
 
         void getBack();
 

@@ -72,7 +72,7 @@ LiveLogReader::~LiveLogReader()
 	delete cam;
 }
 
-void LiveLogReader::getNext()
+void LiveLogReader::getNext(bool gRGB)
 {
     int lastDepth = cam->latestDepthIndex.getValue();
 
