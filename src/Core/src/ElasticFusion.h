@@ -21,6 +21,7 @@
 
 #include "Utils/RGBDOdometry.h"
 #include "Utils/Resolution.h"
+#include "Utils/GlobalCamInfo.h"
 #include "Utils/Intrinsics.h"
 #include "Utils/Stopwatch.h"
 #include "Shaders/Shaders.h"

@@ -70,7 +70,8 @@ private:
             rewind,
             frameToFrameRGB,
             showcaseMode,
-            flipColors;
+            flipColors,
+            useGlobalCam;
 
     int framesToSkip;
     bool streaming{};

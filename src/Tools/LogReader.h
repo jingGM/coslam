@@ -23,6 +23,8 @@
 #  include <cstdint>
 #endif
 #include <string>
+#include <vector>
+
 #if (defined WIN32) && (defined FAR)
 #  undef FAR
 #endif
@@ -33,14 +35,16 @@
 #include <memory>
 #include <Utils/Img.h>
 #include <Utils/Resolution.h>
+#include <Utils/GlobalCamInfo.h>
 
 #include "JPEGLoader.h"
 
 class LogReader
 {
     public:
-        LogReader(std::string file, bool flipColors)
+        LogReader(std::string file, bool flipColors, bool glc)
          : flipColors(flipColors),
+           useGlobalCam(glc),
            timestamp(0),
            depth(0),
            rgb(0),
@@ -48,15 +52,15 @@ class LogReader
            decompressionBufferDepth(0),
            decompressionBufferImage(0),
            file(file),
-           width(Resolution::getInstance().width()),
-           height(Resolution::getInstance().height()),
-           numPixels(width * height)
+//           width(),
+//           height(),
+           numPixels(Resolution::getInstance().width() * Resolution::getInstance().height())
         {}
 
         virtual ~LogReader()
         {}
 
-        virtual void getNext() = 0;
+        virtual void getNext(bool gRGB=false) = 0;
 
         virtual int getNumFrames() = 0;
 
@@ -75,25 +79,30 @@ class LogReader
         virtual void setAuto(bool value) = 0;
 
         bool flipColors;
+        bool useGlobalCam;
         int64_t timestamp;
 
         unsigned short * depth;
         unsigned char * rgb;
+        std::vector<unsigned char *> globalRGB;
         int currentFrame;
 
     protected:
         Bytef * decompressionBufferDepth;
         Bytef * decompressionBufferImage;
+        std::vector<Bytef *> decompressionBufferGlobalImages = {};
         unsigned char * depthReadBuffer;
         unsigned char * imageReadBuffer;
+        std::vector<unsigned char *> globalImageReadBuffer = {};
         int32_t depthSize;
         int32_t imageSize;
+        int32_t globalImageSize;
 
         const std::string file;
         FILE * fp;
         int32_t numFrames;
-        int width;
-        int height;
+//        int width;
+//        int height;
         int numPixels;
 
         JPEGLoader jpeg;

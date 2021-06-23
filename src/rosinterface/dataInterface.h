@@ -6,7 +6,6 @@
 #define COSLAM_DATAINTERFACE_H
 
 #include "ros/ros.h"
-#include "std_msgs/String.h"
 #include "sensor_msgs/Image.h"
 #include "sensor_msgs/Imu.h"
 #include "nav_msgs/Odometry.h"
@@ -23,6 +22,7 @@ private:
     sensor_msgs::CameraInfo rgbCameraInfo;
     sensor_msgs::Imu imu;
     nav_msgs::Odometry odom;
+    uint64_t timeStamp;
 
     int cameraNum = 0;
     std::vector<sensor_msgs::Image> surveillanceImages={};
@@ -44,9 +44,11 @@ public:
     cv::Mat getDepth();
     const unsigned char * getDepthPtr();
     sensor_msgs::CameraInfo getRGBCameraInfo();
-    unsigned int  getTimeStamp();
+    uint64_t  getTimeStamp() const;
     std::vector<double> getOdom();
     std::vector<double> getImu();
+    cv::Mat getSurveillanceRGB(int index);
+    const unsigned char * getSurveillanceRGBPtr(int index);
 
     bool dataReady() const;
 };

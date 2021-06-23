@@ -31,6 +31,17 @@ rosElastic::rosElastic(int argc, char **argv): good(true),
     iclnuim = Parse::get().arg(argc, argv, "-icl", empty) > -1;
     so3 = !(Parse::get().arg(argc, argv, "-nso", empty) > -1);
 
+    flipColors = Parse::get().arg(argc,argv,"-f",empty) > -1;
+    openLoop = !groundTruthOdometry && Parse::get().arg(argc, argv, "-o", empty) > -1;
+    reloc = Parse::get().arg(argc, argv, "-rl", empty) > -1;
+    frameskip = Parse::get().arg(argc, argv, "-fs", empty) > -1;
+    quiet = Parse::get().arg(argc, argv, "-q", empty) > -1;
+    fastOdom = Parse::get().arg(argc, argv, "-fo", empty) > -1;
+    rewind = Parse::get().arg(argc, argv, "-r", empty) > -1;
+    frameToFrameRGB = Parse::get().arg(argc, argv, "-ftf", empty) > -1;
+    showcaseMode = Parse::get().arg(argc, argv, "-sc", empty) > -1;
+    useGlobalCam = Parse::get().arg(argc,argv,"-gl",empty) > -1;
+
     Parse::get().arg(argc, argv, "-c", confidence);
     Parse::get().arg(argc, argv, "-d", depth);
     Parse::get().arg(argc, argv, "-i", icp);
@@ -45,15 +56,9 @@ rosElastic::rosElastic(int argc, char **argv): good(true),
     Parse::get().arg(argc, argv, "-l", logFile);
     Parse::get().arg(argc, argv, "-lm", logMode);
 
-    flipColors = Parse::get().arg(argc,argv,"-f",empty) > -1;
-    openLoop = !groundTruthOdometry && Parse::get().arg(argc, argv, "-o", empty) > -1;
-    reloc = Parse::get().arg(argc, argv, "-rl", empty) > -1;
-    frameskip = Parse::get().arg(argc, argv, "-fs", empty) > -1;
-    quiet = Parse::get().arg(argc, argv, "-q", empty) > -1;
-    fastOdom = Parse::get().arg(argc, argv, "-fo", empty) > -1;
-    rewind = Parse::get().arg(argc, argv, "-r", empty) > -1;
-    frameToFrameRGB = Parse::get().arg(argc, argv, "-ftf", empty) > -1;
-    showcaseMode = Parse::get().arg(argc, argv, "-sc", empty) > -1;
+    if (useGlobalCam){
+        GlobalCamInfo::getInstance(640, 448, 457, 457, 320, 224, 1);
+    }
 
     initializeLogger();
     initializeGUI();
@@ -67,18 +72,20 @@ rosElastic::rosElastic(int argc, char **argv): good(true),
 }
 
 void rosElastic::initializeLogger() {
+    if(logFile.length()) logMode = "record";
+
     if (logMode=="simulation")
     {
-        logReader = std::make_shared<ROSLogReader>(logFile, flipColors, dataInferPtr);
+        logReader = std::make_shared<ROSLogReader>(logFile, flipColors, useGlobalCam, dataInferPtr);
+    }
+    else if(logMode=="record")
+    {
+        logReader = std::make_shared<RawLogReader>(logFile, flipColors, useGlobalCam);
     }
     else
     {
-        if(logFile.length()) {
-            logReader = std::make_shared<RawLogReader>(logFile, flipColors);
-        } else {
-            logReader = std::make_shared<LiveLogReader>(logFile, flipColors, LiveLogReader::CameraType::OpenNI2);
-            good = std::dynamic_pointer_cast<LiveLogReader>(logReader)->cam->ok();
-        }
+        logReader = std::make_shared<LiveLogReader>(logFile, flipColors, useGlobalCam, LiveLogReader::CameraType::OpenNI2);
+        good = std::dynamic_pointer_cast<LiveLogReader>(logReader)->cam->ok();
     }
     logReader->rewind();
 }

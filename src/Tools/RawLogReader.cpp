@@ -18,8 +18,8 @@
 
 #include "RawLogReader.h"
 
-RawLogReader::RawLogReader(std::string file, bool flipColors)
- : LogReader(file, flipColors)
+RawLogReader::RawLogReader(std::string file, bool flipColors, bool glc)
+ : LogReader(file, flipColors, glc)
 {
     assert(pangolin::FileExists(file.c_str()));
 

@@ -41,7 +41,7 @@ class LiveLogReader : public LogReader
       OpenNI2,RealSense
     };
 
-		LiveLogReader(std::string file, bool flipColors, CameraType type);
+		LiveLogReader(std::string file, bool flipColors, bool glc, CameraType type);
 
 		virtual ~LiveLogReader();
 

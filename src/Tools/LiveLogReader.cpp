@@ -21,8 +21,8 @@
 #include "OpenNI2Interface.h"
 #include "RealSenseInterface.h"
 
-LiveLogReader::LiveLogReader(std::string file, bool flipColors, CameraType type)
- : LogReader(file, flipColors),
+LiveLogReader::LiveLogReader(std::string file, bool flipColors, bool glc, CameraType type)
+ : LogReader(file, flipColors, glc),
    lastFrameTime(-1),
    lastGot(-1)
 {

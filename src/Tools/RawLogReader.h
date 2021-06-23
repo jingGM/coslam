@@ -36,7 +36,7 @@
 class RawLogReader : public LogReader
 {
     public:
-        RawLogReader(std::string file, bool flipColors);
+        RawLogReader(std::string file, bool flipColors, bool glc);
 
         virtual ~RawLogReader();
 

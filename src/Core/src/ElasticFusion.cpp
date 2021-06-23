@@ -295,6 +295,8 @@ void ElasticFusion::processFrame(const unsigned char * rgb,
             TOCK("autoFill");
 
             TICK("odomInit");
+
+//TODO: try to understand
             //WARNING initICP* must be called before initRGB*
             frameToModel.initICPModel(shouldFillIn ? &fillIn.vertexTexture : indexMap.vertexTex(),
                                       shouldFillIn ? &fillIn.normalTexture : indexMap.normalTex(),

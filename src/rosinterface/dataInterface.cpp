@@ -23,6 +23,7 @@ void DataInterface::robotRGBCallback(const sensor_msgs::Image& data) {
 
 void DataInterface::robotCameraInfo(const sensor_msgs::CameraInfo &data) {
     rgbCameraInfo = data;
+    timeStamp = data.header.stamp.toNSec();
 }
 
 void DataInterface::robotIMUCallback(const sensor_msgs::Imu &data) {
@@ -124,8 +125,9 @@ cv::Mat DataInterface::getDepth() {
     }
 }
 
-unsigned int DataInterface::getTimeStamp() {
-    return ros::Time::now().nsec;
+uint64_t DataInterface::getTimeStamp() const {
+//    return ros::Time::now().nsec;
+    return timeStamp;
 }
 
 std::vector<double> DataInterface::getOdom() {
@@ -150,6 +152,42 @@ bool DataInterface::dataReady() const {
     while (rgb.height==0 or depth.height==0 or odom.header.seq==0 or imu.header.seq==0) {
         std::cout<<"waiting for data "<<std::endl;
         rate.sleep();
+    }
+}
+
+cv::Mat DataInterface::getSurveillanceRGB(int index) {
+    if (surveillanceImages[index].height==0) return cv::Mat();
+    else {
+        sensor_msgs::Image rgbTMP = surveillanceImages[index];
+        try
+        {
+            cv_bridge::CvImagePtr cv_ptr;
+            cv_ptr = cv_bridge::toCvCopy(rgbTMP, sensor_msgs::image_encodings::BGR8);
+            return cv_ptr->image;
+        }
+        catch (cv_bridge::Exception& e)
+        {
+            ROS_ERROR("cv_bridge exception: %s", e.what());
+        }
+    }
+}
+
+const unsigned char *DataInterface::getSurveillanceRGBPtr(int index) {
+    if (surveillanceImages[index].height==0) return nullptr;
+    else {
+        sensor_msgs::Image rgbTMP = surveillanceImages[index];
+        try
+        {
+            cv_bridge::CvImagePtr cv_ptr;
+            cv_ptr = cv_bridge::toCvCopy(rgbTMP, sensor_msgs::image_encodings::RGB8);
+            unsigned char * tmp_ptr = cv_ptr->image.data;
+            return tmp_ptr;
+        }
+        catch (cv_bridge::Exception& e)
+        {
+            ROS_ERROR("cv_bridge exception: %s", e.what());
+        }
+        return nullptr;
     }
 }
 
