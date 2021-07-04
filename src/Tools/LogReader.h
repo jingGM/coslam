@@ -33,9 +33,9 @@
 #  include <poll.h>
 #endif
 #include <memory>
-#include <Utils/Img.h>
-#include <Utils/Resolution.h>
-#include <Utils/GlobalCamInfo.h>
+#include "../Core/src/Utils/Img.h"
+#include "../Core/src/Utils/Resolution.h"
+#include "../Core/src/Utils/GlobalCamInfo.h"
 
 #include "JPEGLoader.h"
 

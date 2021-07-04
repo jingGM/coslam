@@ -19,8 +19,8 @@
 #ifndef RAWLOGREADER_H_
 #define RAWLOGREADER_H_
 
-#include <Utils/Resolution.h>
-#include <Utils/Stopwatch.h>
+#include "../Core/src/Utils/Resolution.h"
+#include "../Core/src/Utils/Stopwatch.h"
 #include <pangolin/utils/file_utils.h>
 
 #include "LogReader.h"

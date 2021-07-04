@@ -212,7 +212,9 @@ __global__ void tranformMapsKernel(int rows, int cols, const PtrStep<float> vmap
     if (x < cols && y < rows)
     {
         //vertexes
-        float3 vsrc, vdst = make_float3 (__int_as_float(0x7fffffff), __int_as_float(0x7fffffff), __int_as_float(0x7fffffff));
+        float3 vsrc, vdst = make_float3 (__int_as_float(0x7fffffff),
+                                         __int_as_float(0x7fffffff),
+                                         __int_as_float(0x7fffffff));
         vsrc.x = vmap_src.ptr (y)[x];
 
         if (!isnan (vsrc.x))

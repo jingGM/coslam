@@ -34,7 +34,12 @@ find_package(Pangolin 0.1 REQUIRED)
 find_package(CUDA REQUIRED)
 find_package(OpenNI2 REQUIRED)
 find_package(SuiteSparse REQUIRED)
-find_package(efusion REQUIRED)
+#find_package(efusion REQUIRED)
+
+add_subdirectory(src/Core/src)
+set(EFUSION_INCLUDE_DIR
+        src/Core
+        src/Core/ElasticFusion.h)
 
 include_directories(${ZLIB_INCLUDE_DIR})
 include_directories(${EIGEN_INCLUDE_DIRS})
@@ -71,7 +76,8 @@ target_link_libraries(ros_efusion
                         ${Pangolin_LIBRARIES}
                         ${CUDA_LIBRARIES}
                         ${EXTRA_LIBS}
-                        ${EFUSION_LIBRARY}
+#                        ${EFUSION_LIBRARY}
+                        efusion
                         ${OPENNI2_LIBRARY}
                         ${SUITESPARSE_LIBRARIES}
                         ${BLAS_LIBRARIES}

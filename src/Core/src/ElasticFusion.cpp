@@ -15,7 +15,7 @@
  * please email researchcontracts.engineering@imperial.ac.uk.
  *
  */
- 
+
 #include "ElasticFusion.h"
 
 ElasticFusion::ElasticFusion(const int timeDelta,
@@ -277,7 +277,8 @@ void ElasticFusion::processFrame(const unsigned char * rgb,
     {
         computeFeedbackBuffers();
 
-        globalModel.initialise(*feedbackBuffers[FeedbackBuffer::RAW], *feedbackBuffers[FeedbackBuffer::FILTERED]);
+        globalModel.initialise(*feedbackBuffers[FeedbackBuffer::RAW],
+                               *feedbackBuffers[FeedbackBuffer::FILTERED]);
 
         frameToModel.initFirstRGB(textures[GPUTexture::RGB]);
     }
@@ -291,12 +292,12 @@ void ElasticFusion::processFrame(const unsigned char * rgb,
         {
             TICK("autoFill");
             resize.image(indexMap.imageTex(), imageBuff);
+
             bool shouldFillIn = !denseEnough(imageBuff);
             TOCK("autoFill");
 
             TICK("odomInit");
 
-//TODO: try to understand
             //WARNING initICP* must be called before initRGB*
             frameToModel.initICPModel(shouldFillIn ? &fillIn.vertexTexture : indexMap.vertexTex(),
                                       shouldFillIn ? &fillIn.normalTexture : indexMap.normalTex(),

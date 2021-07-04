@@ -17,14 +17,13 @@ int main(int argc, char **argv)
     ros::Rate rate(10);
     while(ros::ok())
     {
-        auto rgb = dataInferPtr->getRGB();
+//        auto rgb = dataInferPtr->getRGB();
+//        cv::imwrite("rgb.jpg", rgb);
+
+
+        auto rgbPtr = dataInferPtr->getSurveillanceRGB(0);
+        cv::Mat rgb = dataInferPtr->getSurveillanceRGB(0);
         cv::imwrite("rgb.jpg", rgb);
-
-//        auto rgbRead = cv::imread("rgb.jpg",cv::IMREAD_COLOR);
-//        cv::imwrite("rgb_copy.jpg", rgb);
-//
-//        auto rgbPtr = dataInferPtr->getRGBPtr();
-
 
         auto depth = dataInferPtr->getDepth();
         cv::imwrite("depth.jpg", depth);

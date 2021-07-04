@@ -6,9 +6,10 @@
 #define COSLAM_ROSELASTIC_H
 
 #include <memory>
-#include <ElasticFusion.h>
-#include <Utils/Parse.h>
-
+//#include <ElasticFusion.h>
+//#include <Utils/Parse.h>
+#include "Core/src/Utils/Parse.h"
+#include "Core/src/ElasticFusion.h"
 #include "rosinterface/rosInterface.h"
 #include "rosinterface/dataInterface.h"
 
@@ -34,6 +35,7 @@ private:
     void initializeGUI();
     void initializeEfusion();
     void initializeLogger();
+    void initializeROSInterface(int argc, char **argv);
 
     bool good;
     ElasticFusionPtr eFusion=nullptr;
