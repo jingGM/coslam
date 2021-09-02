@@ -68,7 +68,6 @@
 > > * frameToModel.initICPModel
 > >     * copy predictedVertices/Normals to vmaps_g_prev_/nmaps_g_prev_[0](rows * 3, cols)
 > >     * resize the maps for pyramid by 2:   vmaps_g_prev_
-> >     - [x] **need to know how why src=dst 202 RGBDOdometry.cpp vmap_dst.create(rows * 3, cols);cudafuncs**
 > >     * transform the vertices by currPose
 > > * frameToModel.initRGBModel: input rgb
 > >     * give vmaps_tmp's depth info to lastDepth and do Gaussian for pyramid
@@ -84,7 +83,17 @@
 
 > 5. Odom transformation:
 > > * Use sobel to compute the gradience of nextImage(rgb) to nextdIdx/nextIdy
-> > * 
+> > * if so3: give resultR
+> >     - only consider rotation of rgb from last image to current image
+> >     - average gradient of last and current pixel -> gx,gy
+> > * for all pyramid
+> >     - give lastDepth to real points pointClouds
+> >     - use inverse transformation
+> >     - get rgb residual to lastRGBError and image size to lastRGBCount:
+> >         - set corresImg value using the case when last depth are similar to current.
+> >         - give the sum of all coresImg.value (square of all differences of image rgb values) 
+> >     - give icp residual to lastICPError and points count to lastICPCount
+> >         - [x] **need to know how**
 
 
 ---
@@ -95,11 +104,11 @@
 > > * 3 pyramids
 > > * 0:(width, height), 1:(width, height)/2, 2:(width, height)/4
 > 
-> > vmaps_g_prev_/nmaps_g_prev_(textures); vmaps_curr_/nmaps_curr_(actual)
+> > vmaps_g_prev_(position)/nmaps_g_prev_; vmaps_curr_(position)/nmaps_curr_
 > > * 3 pyramids: 0:(width, height), 1:(width, height)/2, 2:(width, height)/4
 > > * each (pyr_rows*3, pyr_cols): x: (0-width, height), y:(width-2width, height), z:(2width-3width, height)
 > 
-> > vmaps_tmp/nmaps_tmp(textures);
+> > vmaps_tmp/nmaps_tmp(textures:rgbd);
 > > (height * 4 * width): {[(0,1,2,3),(0,1,2,3)...],[...]}
 
 > Sizes: matrix
@@ -108,3 +117,13 @@
 > > * R_lr = Identity; jtj:(3,3); jtr:(3,1)
 > > * imageBasis = homography = K * resultR * kinv
 > > * krlr = K * resultR
+> > * resultRt(4,4)
+> > * Rt = [RT, -RT*t]
+> > * R = RT, Kt = K * (-RT*t), krkInv = K * RT * KInv
+
+## DataTerm
+> zero: last image pixels
+> one: current image pixels
+> diff: image differences
+> valid: if the pixels are in the image plane
+> value: different values x=1 y=diff*diff

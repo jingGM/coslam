@@ -1,55 +1,52 @@
 //
-// Created by jing on 4/25/21.
+// Created by jing on 7/9/21.
 //
 
-#ifndef COSLAM_ROSELASTIC_H
-#define COSLAM_ROSELASTIC_H
+#ifndef SLAM_ROSELASTIC_H
+#define SLAM_ROSELASTIC_H
 
 #include <memory>
-//#include <ElasticFusion.h>
-//#include <Utils/Parse.h>
-#include "Core/src/Utils/Parse.h"
-#include "Core/src/ElasticFusion.h"
-#include "rosinterface/rosInterface.h"
-#include "rosinterface/dataInterface.h"
 
-#include "Tools/GUI.h"
-#include "Tools/GroundTruthOdometry.h"
+#include "Tools/rosinterface/rosInterface.h"
+#include "Tools/rosinterface/dataInterface.h"
 #include "Tools/RawLogReader.h"
 #include "Tools/LiveLogReader.h"
 #include "Tools/ROSLogReader.h"
-//#include "GUI/src/MainController.h"
+#include "Tools/GroundTruthOdometry.h"
+#include "GLDisplay/GUI.h"
+
+#include "Utils/LocalCameraInfo.h"
+#include "Utils/GlobalCamInfo.h"
+
+#include "Core/ElasticFusion.h"
+
 
 class rosElastic {
 public:
-    dataInterfacePtr dataInferPtr = nullptr;
-    rosInterfacePtr rosInterPtr = nullptr;
-//    MainControllerPtr mainControllerPtr = nullptr;
-
     rosElastic(int argc, char * argv[]);
-
     void run();
-//    void runSample(int argc, char **argv);
+
+    // TODO: need to comment out when release
+    void test_GUI();
+    void test_run();
 
 private:
+    void initializeROSInterface(int argc, char **argv);
+    void initializeLogger();
     void initializeGUI();
     void initializeEfusion();
-    void initializeLogger();
-    void initializeROSInterface(int argc, char **argv);
 
-    bool good;
-    ElasticFusionPtr eFusion=nullptr;
-    GUIPtr gui=nullptr;
     LogReaderPtr logReader=nullptr;
-    GroundTruthOdometryPtr groundTruthOdometry= nullptr;
-    ResizePtr resizeStream=nullptr;
+    GroundTruthOdometryPtr gtOdometry=nullptr;
+    dataInterfacePtr dataInferPtr = nullptr;
+    rosInterfacePtr rosInterPtr = nullptr;
+    GUIPtr gui=nullptr;
+    ElasticFusionPtr eFusion=nullptr;
 
-    bool iclnuim;
-    std::string logFile;
+    std::string logFile, groundTruthFile;
     std::string logMode;
-    std::string poseFile;
 
-    float confidence,
+    float   confidence,
             depth,
             icp,
             icpErrThresh,
@@ -57,30 +54,30 @@ private:
             photoThresh,
             fernThresh;
 
-    int timeDelta,
+    int     framesToSkip,
+            timeDelta,
             icpCountThresh,
             start,
-            end;
+            end,
+            globalTimeDiff,
+            globalCamNum;
 
-    bool fillIn{},
-            openLoop,
-            reloc,
-            frameskip,
+    bool    good,
             quiet,
+            frameskip,
+            iclnuim,
+            resetButton,
+            flipColors,
+            globalCamOn,
             fastOdom,
             so3,
-            rewind,
             frameToFrameRGB,
             showcaseMode,
-            flipColors,
-            useGlobalCam;
-
-    int framesToSkip;
-    bool streaming{};
-    bool resetButton;
-
-
+            openLoop,
+            rewind,
+            reloc
+            ;
 };
 
 
-#endif //COSLAM_ROSELASTIC_H
+#endif //SLAM_ROSELASTIC_H

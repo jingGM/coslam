@@ -1,38 +1,27 @@
 //
-// Created by jing on 5/26/21.
+// Created by jing on 8/19/21.
 //
 
-#include <opencv2/highgui.hpp>
-#include "../rosinterface/dataInterface.h"
-#include "../rosinterface/rosInterface.h"
+#include <iostream>
+#include "../Tools/ROSLogReader.h"
+#include "../Tools/rosinterface/rosInterface.h"
+#include "../Tools/rosinterface/dataInterface.h"
 
-int main(int argc, char **argv)
+int main(int argc, char *argv[])
 {
-    ros::init(argc, argv, "ros_interface");
+    ros::init(argc, argv, "ros_efusion");
+    auto dataInferPtr = std::make_shared<DataInterface>(1);
+    auto rosInterPtr = std::make_shared<rosInterface>(dataInferPtr, 1);
+    LogReaderPtr logReader = std::make_shared<ROSLogReader>("", false, true, dataInferPtr, 100);
 
-    dataInterfacePtr dataInferPtr = std::make_shared<DataInterface>(4);
-    rosInterface rosInter(dataInferPtr,4);
-
-    dataInferPtr->dataReady();
-    ros::Rate rate(10);
-    while(ros::ok())
-    {
-//        auto rgb = dataInferPtr->getRGB();
-//        cv::imwrite("rgb.jpg", rgb);
+    while (not ros::isShuttingDown()) {
+        logReader->getNext();
+        auto rgb = logReader->rgb;
+        auto depth = logReader->depth;
+        auto global = logReader->globalRGB[0];
 
 
-        auto rgbPtr = dataInferPtr->getSurveillanceRGB(0);
-        cv::Mat rgb = dataInferPtr->getSurveillanceRGB(0);
-        cv::imwrite("rgb.jpg", rgb);
-
-        auto depth = dataInferPtr->getDepth();
-        cv::imwrite("depth.jpg", depth);
-
-        auto depthPtr = dataInferPtr->getDepthPtr();
-//        std::cout<<"main"<<std::endl;
-
-        rate.sleep();
     }
-
     return 0;
 }
+

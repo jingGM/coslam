@@ -28,7 +28,7 @@
 #include <chrono>
 #include <thread>
 
-#include "../Core/src/Utils/Parse.h"
+#include "../Utils/Parse.h"
 
 #include "LogReader.h"
 #include "CameraInterface.h"

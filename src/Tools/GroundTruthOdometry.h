@@ -31,13 +31,13 @@
 #include <iostream>
 #include <fstream>
 #include <map>
-#include "../Core/src/Utils/OdometryProvider.h"
+#include "OdometryProvider.h"
 #include <memory>
 
 class GroundTruthOdometry
 {
     public:
-        GroundTruthOdometry(const std::string & filename);
+        GroundTruthOdometry(const std::string filename);
 
         virtual ~GroundTruthOdometry();
 
@@ -50,6 +50,7 @@ class GroundTruthOdometry
 
         std::map<uint64_t, Eigen::Isometry3f, std::less<int>, Eigen::aligned_allocator<std::pair<const uint64_t, Eigen::Isometry3f> > > camera_trajectory;
         uint64_t last_utime;
+        std::string fileName;
 };
 
 typedef std::shared_ptr<GroundTruthOdometry> GroundTruthOdometryPtr;

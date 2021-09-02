@@ -33,9 +33,9 @@
 #  include <poll.h>
 #endif
 #include <memory>
-#include "../Core/src/Utils/Img.h"
-#include "../Core/src/Utils/Resolution.h"
-#include "../Core/src/Utils/GlobalCamInfo.h"
+#include "../Utils/Img.h"
+#include "../Utils/LocalCameraInfo.h"
+#include "../Utils/GlobalCamInfo.h"
 
 #include "JPEGLoader.h"
 
@@ -54,7 +54,7 @@ class LogReader
            file(file),
 //           width(),
 //           height(),
-           numPixels(Resolution::getInstance().width() * Resolution::getInstance().height())
+           numPixels(LocalCameraInfo::getInstance().width() * LocalCameraInfo::getInstance().height())
         {}
 
         virtual ~LogReader()

@@ -6,16 +6,18 @@
 #define COSLAM_ROSLOGREADER_H
 
 #include "LogReader.h"
-#include "../rosinterface/dataInterface.h"
-#include "../Core/src/Utils/Parse.h"
+#include "rosinterface/dataInterface.h"
+#include "../Utils/Parse.h"
 
 class ROSLogReader : public LogReader
 {
 public:
-    ROSLogReader(std::string file, bool flipColors, bool glc, dataInterfacePtr dataPtr);
+    // timeDiff: ms
+    ROSLogReader(std::string file, bool flipColors, bool glc, dataInterfacePtr dataPtr, int64_t timeDiff);
     ~ROSLogReader();
 
-    void getNext(bool gRGB);
+    void getNext(bool gRGB=false);
+    void calculateGlobalCam();
 
     bool rewound() {return false;}
     void rewind() {}
@@ -26,8 +28,10 @@ public:
     int getNumFrames() {return 0;}
     const std::string  getFile() {return Parse::get().baseDir().append("live");};
 private:
+    bool globalCamOn;
     dataInterfacePtr dataPtr;
     int64_t lastFrameTime=0;
+    int64_t frequency = 0;
 };
 
 

@@ -18,10 +18,10 @@
 
 #include "GroundTruthOdometry.h"
 
-GroundTruthOdometry::GroundTruthOdometry(const std::string & filename)
- : last_utime(0)
+GroundTruthOdometry::GroundTruthOdometry(const std::string filename)
+ : last_utime(0), fileName(filename)
 {
-    loadTrajectory(filename);
+//    loadTrajectory(filename);
 }
 
 GroundTruthOdometry::~GroundTruthOdometry()
