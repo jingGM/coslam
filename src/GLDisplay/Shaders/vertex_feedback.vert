@@ -51,7 +51,7 @@ void main()
     vec3 vNormLocal = getNormal(vPosition.xyz, texcoord.xy, x, y, cam, gSampler);
     // normal is the normalized cross product of depth differences in x and y directions.
     vNormRad = vec4(vNormLocal, getRadius(vPosition.z, vNormLocal.z));
-    // radius = min [2sqrt(2) z (fxfy)/(fx+fy)), 2sqrt(2) z/abs(nz) (fxfy)/(fx+fy)) ]
+    // radius = min [1 pixel projected length * 2sqrt(2), 1 pixel projected length / norm_z]
     
     if(vPosition.z <= 0 || vPosition.z > maxDepth)
     {

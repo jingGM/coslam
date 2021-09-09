@@ -363,11 +363,11 @@ void ElasticFusion::createCompute()
     computePacks[ComputePack::NORM] = new ComputePack(loadProgramFromFile("empty.vert", "depth_norm.frag", "quad.geom"),
                                                       textures[GPUTexture::DEPTH_NORM]->texture);
 
-    //smooth: compute the average value of the near by +- 3 pixels as the color
+    //smooth: compute the average weighted value of the near by +- 6 pixels as the color
     computePacks[ComputePack::FILTER] = new ComputePack(loadProgramFromFile("empty.vert", "depth_bilateral.frag", "quad.geom"),
                                                         textures[GPUTexture::DEPTH_FILTERED]->texture);
 
-    // threshold the data to the value [300u - maxD]
+    // value/1000 and threshold the data to the value [0.3u - maxD]
     computePacks[ComputePack::METRIC] = new ComputePack(loadProgramFromFile("empty.vert", "depth_metric.frag", "quad.geom"),
                                                         textures[GPUTexture::DEPTH_METRIC]->texture);
 
@@ -568,7 +568,7 @@ void ElasticFusion::processFrame(const unsigned char * rgb,
     {
         computeFeedbackBuffers();
 
-        // globalModel defines the total vertices that gui can send, but all in local frames
+        // globalModel defines the total vertices that gui can send
         // combine the raw depth and color with filtered norm, then pass it to rawFeedback.vbo
         globalModel.initialise(*feedbackBuffers[FeedbackBuffer::RAW],
                                *feedbackBuffers[FeedbackBuffer::FILTERED]);

@@ -19,7 +19,7 @@
 #include "FillIn.h"
 
 FillIn::FillIn()
- : imageTexture(LocalCameraInfo::getInstance().width(),
+ : j(LocalCameraInfo::getInstance().width(),
                 LocalCameraInfo::getInstance().height(),
                 GL_RGBA,
                 GL_RGB,
