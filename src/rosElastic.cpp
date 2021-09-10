@@ -53,7 +53,7 @@ rosElastic::rosElastic(int argc, char **argv): good(true),
 
     globalTimeDiff = 1;
     globalCamNum = 1;
-    globalCamOn = true; //Parse::get().arg(argc,argv,"-gl",empty) > -1;
+    globalCamOn = Parse::get().arg(argc,argv,"-gl",empty) > -1;
     Parse::get().arg(argc, argv, "-gf", globalTimeDiff);
 
     if (globalCamOn){
