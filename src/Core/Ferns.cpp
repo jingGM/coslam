@@ -129,9 +129,10 @@ bool Ferns::addFrame(GPUTexture * imageTexture,
             // compare all conservatory with the sampled vertex
             frame->goodCodes++;
 
+            // add one coOccurrences to other frames with the same feature of code
             for(size_t j = 0; j < conservatory.at(i).ids[code].size(); j++)
             {
-                // each fern ids: code->[num]: index of coOccurences
+                // each fern ids: features(code) index of coOccurences
                 // coOccurences contains id of each frame
                 coOccurrences[conservatory.at(i).ids[code].at(j)]++;
             }
