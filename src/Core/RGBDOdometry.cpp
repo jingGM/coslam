@@ -125,7 +125,8 @@ void RGBDOdometry::initICP(GPUTexture * filteredDepth, const float depthCutoff)
 
     cudaGraphicsSubResourceGetMappedArray(&textPtr, filteredDepth->cudaRes, 0, 0);
 
-    cudaMemcpy2DFromArray(depth_tmp[0].ptr(0), depth_tmp[0].step(), textPtr, 0, 0, depth_tmp[0].colsBytes(), depth_tmp[0].rows(), cudaMemcpyDeviceToDevice);
+    cudaMemcpy2DFromArray(depth_tmp[0].ptr(0), depth_tmp[0].step(), textPtr, 0, 0,
+                          depth_tmp[0].colsBytes(), depth_tmp[0].rows(), cudaMemcpyDeviceToDevice);
 
     cudaGraphicsUnmapResources(1, &filteredDepth->cudaRes);
 
@@ -203,7 +204,7 @@ void RGBDOdometry::initICPModel(GPUTexture * predictedVertices,
     mat33 device_Rcam = Rcam;
     float3 device_tcam = *reinterpret_cast<float3*>(tcam.data());
 
-    // convert local frame to global
+    // convert global to local
     for(int i = 0; i < NUM_PYRS; ++i)
     {
         tranformMaps(vmaps_g_prev_[i], nmaps_g_prev_[i], device_Rcam, device_tcam, vmaps_g_prev_[i], nmaps_g_prev_[i]);

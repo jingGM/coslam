@@ -595,7 +595,7 @@ void ElasticFusion::processFrame(const unsigned char * rgb,
             TICK("odomInit");
 
             //WARNING initICP* must be called before initRGB*
-            // copy vertices/normals to vmaps_tmp/nmaps_tmp and convert to global vmaps_g_prev_/nmaps_g_prev_
+            // copy vertices/normals to vmaps_tmp/nmaps_tmp and convert to local vmaps_g_prev_/nmaps_g_prev_
             frameToModel.initICPModel(shouldFillIn ? &fillIn.vertexTexture : indexMap.vertexTex(),
                                       shouldFillIn ? &fillIn.normalTexture : indexMap.normalTex(),
                                       maxDepthProcessed, currPose);
@@ -723,7 +723,6 @@ void ElasticFusion::processFrame(const unsigned char * rgb,
 
             TICK("Ferns::findFrame");
 
-
             // return estimated pose: identity(1st)
             // constraints includes all vert points with the 1st optimized point and the second optimized point with closed loop
             // give lastClosest to the most similar frame id
@@ -741,7 +740,7 @@ void ElasticFusion::processFrame(const unsigned char * rgb,
 
         bool fernAccepted = false;
 
-        // TODO: need to understand when ferns.lastClosest != -1, also to understand the fernMatch and relaxGraph
+        // TODO: need to to understand the fernMatch and relaxGraph
         if(closeLoops && ferns.lastClosest != -1)
         {
             if(lost)
