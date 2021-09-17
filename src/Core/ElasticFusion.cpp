@@ -912,7 +912,6 @@ void ElasticFusion::processFrame(const unsigned char * rgb,
             //If we're deforming we need to predict the depth again to figure out which
             //points to update the timestamp's of, since a deformation means a second pose update
             //this loop
-            // TODO: check when there is closed loop
             if(rawGraph.size() > 0 && !fernAccepted)
             {
                 indexMap.synthesizeDepth(currPose,

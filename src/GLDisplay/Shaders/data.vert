@@ -129,7 +129,8 @@ void main()
         
         vec3 ray = vec3(xl, yl, 1);
 	    
-	    for(float i = texcoord.x - (scale * indexXStep * windowMultiplier); i < texcoord.x + (scale * indexXStep * windowMultiplier); i += indexXStep)
+	    for(float i = texcoord.x - (scale * indexXStep * windowMultiplier); 
+            i < texcoord.x + (scale * indexXStep * windowMultiplier); i += indexXStep)
 	    {
 	        for(float j = texcoord.y - (scale * indexYStep * windowMultiplier); j < texcoord.y + (scale * indexYStep * windowMultiplier); j += indexYStep)
 	        { 
