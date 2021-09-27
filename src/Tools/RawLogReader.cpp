@@ -73,6 +73,7 @@ void RawLogReader::getCore()
     assert(tmp);
     tmp = fread(&imageSize,sizeof(int32_t),1,fp);
     assert(tmp);
+//    std::cout<<depthSize<<"/"<<imageSize<<std::endl;
 
     tmp = fread(depthReadBuffer,depthSize,1,fp);
     assert(tmp);
@@ -109,7 +110,7 @@ void RawLogReader::getCore()
         memset(&decompressionBufferImage[0], 0, numPixels * 3);
     }
 
-    depth = (unsigned short *)decompressionBufferDepth;
+    depth = (unsigned short *)&decompressionBufferDepth[0];
     rgb = (unsigned char *)&decompressionBufferImage[0];
 
 //    auto depth_image_depth = *depth;

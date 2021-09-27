@@ -38,7 +38,7 @@ class GPUTexture
 
         virtual ~GPUTexture();
 
-        static const std::string RGB, DEPTH_RAW, DEPTH_FILTERED, DEPTH_METRIC, DEPTH_METRIC_FILTERED, DEPTH_NORM, GLOBAL_RAW, GLOBAL_FILTERED;
+        static const std::string RGB, DEPTH_RAW, DEPTH_FILTERED, DEPTH_METRIC, DEPTH_METRIC_FILTERED, DEPTH_NORM, GLOBAL_RAW;
 
         pangolin::GlTexture * texture;
 

@@ -8,11 +8,11 @@
   <arg name="cam_pitch"    default="0"/>
   <arg name="cam_yaw"      default="0"/>
 
-  <param name="/$(arg ns)/robot_description" command="$(find xacro)/xacro --inorder $(find coslam)/gazebo/models/rgbd_camera/r200.urdf.xacro  namespace:=$(arg ns) offset_pz:=$(arg z) offset_r:=$(arg cam_roll) offset_p:=$(arg cam_pitch) offset_y:=$(arg cam_yaw) " />
+  <param name="/$(arg ns)/robot_description" command="$(find xacro)/xacro --inorder $(find coslam)/gazebo/models/rgbd_camera/r200.urdf.xacro  namespace:=$(arg ns) offset_pz:=$(arg z) offset_r:=$(arg cam_roll) offset_p:=$(arg cam_pitch) offset_y:=$(arg cam_yaw) b_yaw:=$(arg base_yaw) base_x:=$(arg x) base_y:=$(arg y) " />
 
-  <node pkg="gazebo_ros" type="spawn_model" name="spawn_urdf" ns="$(arg ns)" args="-urdf -param /$(arg ns)/robot_description -model $(arg ns) -x $(arg x) -y $(arg y) -Y $(arg base_yaw) -param /$(arg ns)/robot_description"/>
+  <node pkg="gazebo_ros" type="spawn_model" name="spawn_urdf" ns="$(arg ns)" args="-urdf -param /$(arg ns)/robot_description -model $(arg ns) -x 0 -y 0 -param /$(arg ns)/robot_description"/>
 
-  <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher" ns="$(arg ns)">
+  <node pkg="robot_state_publisher" type="robot_state_publisher" name="rgb_state_publisher" ns="$(arg ns)">
     <param name="tf_prefix"         value="$(arg ns)"/>
     <param name="publish_frequency" type="double" value="30.0" />
   </node>

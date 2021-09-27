@@ -5,12 +5,22 @@
   <xacro:property name="r200_cam_rgb_px" value="0.005"/>
   <xacro:property name="r200_cam_rgb_py" value="0.018"/>
   <xacro:property name="r200_cam_rgb_pz" value="0.013"/>
-  <xacro:property name="r200_cam_depth_offset" value="0.01"/>
+  <xacro:property name="r200_cam_depth_offset" value="0.00"/>
+
+  <xacro:arg name="offset_pz" default="5"/>
+  <xacro:arg name="offset_r" default="0"/>
+  <xacro:arg name="offset_p" default="0"/>
+  <xacro:arg name="offset_y" default="0"/>
+  <xacro:arg name="namespace" default="rgb0"/>
+  <xacro:arg name="base_x" default="0"/>
+  <xacro:arg name="base_y" default="0"/>
+  <xacro:arg name="b_yaw" default="0"/>
+  
 
   <link name="camera_base"/>
 
   <joint name="camera_base_joint" type="fixed">
-    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <origin xyz="$(arg base_x) $(arg base_y) 0" rpy="0 0 $(arg b_yaw)"/>
     <parent link="camera_base"/>
     <child link="camera_base_link" />
   </joint>
@@ -66,9 +76,9 @@
   <joint name="camera_rgb_joint" type="fixed">
     <origin xyz="${r200_cam_rgb_px} ${r200_cam_rgb_py} ${r200_cam_rgb_pz}" rpy="0 0 0"/>
     <parent link="camera_link"/>
-    <child link="camera_rgb_frame" />
+    <child link="camera_optical_frame" />
   </joint>
-  <link name="camera_rgb_frame"/>
+  <!-- <link name="camera_rgb_frame"/>
 
   <joint name="camera_rgb_optical_joint" type="fixed">
     <origin xyz="0 0 0" rpy="${-M_PI/2} 0 ${-M_PI/2}" />
@@ -88,12 +98,12 @@
   <joint name="camera_depth_optical_joint" type="fixed">
       <origin xyz="0 0 0" rpy="${-M_PI/2} 0 ${-M_PI/2}" />
       <parent link="camera_depth_frame" />
-      <child link="camera_depth_optical_frame" />
-  </joint>
-  <link name="camera_depth_optical_frame"/>
+      <child link="camera_optical_frame" />
+  </joint> -->
+  <link name="camera_optical_frame"/>
   
 	
-  <gazebo reference="camera_link">  
+  <gazebo reference="camera_optical_frame">  
     <sensor type="depth" name="camera">
       <always_on>true</always_on>
       <update_rate>60.0</update_rate>
@@ -102,7 +112,7 @@
         <image>
           <format>B8G8R8</format>
           <width>640</width>
-          <height>448</height>
+          <height>480</height>
         </image>
         <clip>
           <near>0.1</near>
@@ -124,7 +134,7 @@
         <pointCloudTopicName>depth/points</pointCloudTopicName>
         <cameraInfoTopicName>camera_info</cameraInfoTopicName>
         <depthImageCameraInfoTopicName>depth/camera_info</depthImageCameraInfoTopicName>
-        <frameName>camera_depth_optical_frame</frameName>
+        <frameName>camera_optical_frame</frameName>
         <baseline>0.1</baseline>
         <distortion_k1>0.0</distortion_k1>
         <distortion_k2>0.0</distortion_k2>
@@ -135,4 +145,23 @@
       </plugin>
     </sensor>
   </gazebo>
+
+  <!-- <this one cannot be used with other velocity control> -->
+  <!-- <gazebo>
+    <plugin name="object_controller" filename="libgazebo_ros_planar_move.so">
+      <commandTopic>rgbd_cmd</commandTopic>
+      <odometryTopic>odom</odometryTopic>
+      <odometryFrame>$(arg namespace)/camera_base</odometryFrame>
+      <odometryRate>20.0</odometryRate>
+      <robotBaseFrame>odom</robotBaseFrame>
+    </plugin>
+  </gazebo>   -->
+
+  <!-- <gazebo>
+    <plugin name="joint_state_publisher" filename="libgazebo_ros_joint_state_publisher.so">
+       <jointName>your_joint</jointName>
+       <updateRate>50.0</updateRate>
+       <alwaysOn>true</alwaysOn>
+    </plugin>
+  </gazebo> -->
 </robot>

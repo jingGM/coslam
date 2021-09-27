@@ -8,7 +8,8 @@ ElasticFusion::ElasticFusion(const int timeDelta, const int countThresh, const f
                              const bool closeLoops, const bool iclnuim, const float photoThresh, const float confidence,
                              const float depthCut, const float icpThresh, const bool fastOdom, const bool reloc,
                              const float fernThresh, const bool so3, const bool frameToFrameRGB,
-                             const std::string fileName, const bool useGlobalCam)
+                             const std::string fileName, const bool useGlobalCam, const bool deformation,
+                             const std::vector<std::vector<double>> globalPose)
 :   frameToModel(LocalCameraInfo::getInstance().width(),
                  LocalCameraInfo::getInstance().height(),
                  LocalCameraInfo::getInstance().cx(),
@@ -21,6 +22,12 @@ ElasticFusion::ElasticFusion(const int timeDelta, const int countThresh, const f
                  LocalCameraInfo::getInstance().cy(),
                  LocalCameraInfo::getInstance().fx(),
                  LocalCameraInfo::getInstance().fy()),
+    globalToModel(LocalCameraInfo::getInstance().width(),
+                  LocalCameraInfo::getInstance().height(),
+                  LocalCameraInfo::getInstance().cx(),
+                  LocalCameraInfo::getInstance().cy(),
+                  LocalCameraInfo::getInstance().fx(),
+                  LocalCameraInfo::getInstance().fy()),
     tick(1),
     timeDelta(timeDelta),
     icpCountThresh(countThresh),
@@ -45,6 +52,7 @@ ElasticFusion::ElasticFusion(const int timeDelta, const int countThresh, const f
     confidenceThreshold(confidence),
     deforms(0),
     fernDeforms(0),
+    deformation(deformation),
     frameToFrameRGB(frameToFrameRGB),
     consSample(20),
     saveFilename(fileName),
@@ -56,7 +64,8 @@ ElasticFusion::ElasticFusion(const int timeDelta, const int countThresh, const f
     imageBuff(LocalCameraInfo::getInstance().rows() / consSample, LocalCameraInfo::getInstance().cols() / consSample),
     consBuff(LocalCameraInfo::getInstance().rows() / consSample, LocalCameraInfo::getInstance().cols() / consSample),
     timesBuff(LocalCameraInfo::getInstance().rows() / consSample, LocalCameraInfo::getInstance().cols() / consSample),
-    ferns(500, depthCut * 1000, photoThresh)
+    ferns(500, depthCut * 1000, photoThresh),
+    globalCamPose(globalPose)
 {
     createTextures();
     createCompute();
@@ -347,13 +356,6 @@ void ElasticFusion::createTextures()
                                                           GL_UNSIGNED_BYTE,
                                                           true,
                                                           true);
-        textures[GPUTexture::GLOBAL_FILTERED] = new GPUTexture(GlobalCamInfo::getInstance().width(),
-                                                               GlobalCamInfo::getInstance().height(),
-                                                               GL_RGBA,
-                                                               GL_RGB,
-                                                               GL_UNSIGNED_BYTE,
-                                                               true,
-                                                               true);
     }
 }
 
@@ -553,7 +555,6 @@ void ElasticFusion::processFrame(const unsigned char * rgb,
     if(useGlobalCam)
     {
         textures[GPUTexture::GLOBAL_RAW]->texture->Upload(globalRGB, GL_RGB, GL_UNSIGNED_BYTE);
-        textures[GPUTexture::GLOBAL_FILTERED]->texture->Upload(globalRGB, GL_RGB, GL_UNSIGNED_BYTE);
     }
 
     TICK("Preprocess");
@@ -576,6 +577,8 @@ void ElasticFusion::processFrame(const unsigned char * rgb,
         // give covert rgb to intensity and pass it to lastNextImage[0]
         // update lastNextImage[1,2] by shrink size of 2 and using Guassian kernel to compute.
         frameToModel.initFirstRGB(textures[GPUTexture::RGB]);
+
+        globalToModel.initFirstRGB(textures[GPUTexture::GLOBAL_RAW]);
     }
     else
     {
@@ -691,6 +694,10 @@ void ElasticFusion::processFrame(const unsigned char * rgb,
         {
             currPose = *inPose;
         }
+// TODO:
+//        if (useGlobalCam) {
+//            globalToModel.
+//        }
 
         Eigen::Matrix4f diff = currPose.inverse() * lastPose;
 
@@ -740,150 +747,152 @@ void ElasticFusion::processFrame(const unsigned char * rgb,
 
         bool fernAccepted = false;
 
-        // TODO: need to to understand the fernMatch and relaxGraph
-        if(closeLoops && ferns.lastClosest != -1)
-        {
-            if(lost)
+        if (deformation){
+            // TODO: need to to understand the fernMatch and relaxGraph
+            if(closeLoops && ferns.lastClosest != -1)
             {
-                currPose = recoveryPose;
-                lastFrameRecovery = true;
-            }
-            else
-            {
-                for(size_t i = 0; i < constraints.size(); i++)
-                {
-                    globalDeformation.addConstraint(constraints.at(i).sourcePoint,
-                                                    constraints.at(i).targetPoint,
-                                                    tick,
-                                                    ferns.frames.at(ferns.lastClosest)->srcTime,
-                                                    true);
-                }
-
-                // TODO: recheck when the relativeCons is not empty
-                for(size_t i = 0; i < relativeCons.size(); i++)
-                {
-                    globalDeformation.addConstraint(relativeCons.at(i));
-                }
-
-                if(globalDeformation.constrain(ferns.frames, rawGraph, tick, true, poseGraph, true))
+                if(lost)
                 {
                     currPose = recoveryPose;
-
-                    poseMatches.push_back(PoseMatch(ferns.lastClosest,
-                                                    ferns.frames.size(), ferns.frames.at(ferns.lastClosest)->pose, currPose, constraints, true));
-
-                    fernDeforms += rawGraph.size() > 0;
-
-                    fernAccepted = true;
+                    lastFrameRecovery = true;
                 }
-            }
-        }
-
-        //If we didn't match to a fern
-        if(!lost && closeLoops && rawGraph.size() == 0)
-        {
-            // Only predict old view, since we just predicted the current view for the ferns (which failed!)
-            // Give everything of the world frame to the old_buffer
-            TICK("IndexMap::INACTIVE");
-            indexMap.combinedPredict(currPose,
-                                     globalModel.model(),
-                                     maxDepthProcessed,
-                                     confidenceThreshold,
-                                     0,
-                                     tick - timeDelta, // the time bigger than the nearest timeDelta time will be discarded
-                                     timeDelta,
-                                     IndexMap::INACTIVE);
-            TOCK("IndexMap::INACTIVE");
-
-            //WARNING initICP* must be called before initRGB*
-            modelToModel.initICPModel(indexMap.oldVertexTex(), indexMap.oldNormalTex(), maxDepthProcessed, currPose);
-            modelToModel.initRGBModel(indexMap.oldImageTex());
-
-            modelToModel.initICP(indexMap.vertexTex(), indexMap.normalTex(), maxDepthProcessed);
-            modelToModel.initRGB(indexMap.imageTex());
-
-            Eigen::Vector3f trans = currPose.topRightCorner(3, 1);
-            Eigen::Matrix<float, 3, 3, Eigen::RowMajor> rot = currPose.topLeftCorner(3, 3);
-
-            // use vertices before 200 frames estimate the rotation and transformation of the current 200 frames
-            modelToModel.getIncrementalTransformation(trans,
-                                                      rot,
-                                                      false,
-                                                      10,
-                                                      pyramid,
-                                                      fastOdom,
-                                                      false);
-
-            Eigen::MatrixXd covar = modelToModel.getCovariance();
-            bool covOk = true;
-
-            auto t = tick;
-            for(int i = 0; i < 6; i++)
-            {
-                if(covar(i, i) > covThresh)
+                else
                 {
-                    covOk = false;
-                    break;
-                }
-            }
-
-            Eigen::Matrix4f estPose = Eigen::Matrix4f::Identity();
-
-            estPose.topRightCorner(3, 1) = trans;
-            estPose.topLeftCorner(3, 3) = rot;
-
-            if(covOk && modelToModel.lastICPCount > icpCountThresh && modelToModel.lastICPError < icpErrThresh)
-            {
-
-                resize.vertex(indexMap.vertexTex(), consBuff);
-                resize.time(indexMap.oldTimeTex(), timesBuff);
-
-                for(int i = 0; i < consBuff.cols; i++)
-                {
-                    for(int j = 0; j < consBuff.rows; j++)
+                    for(size_t i = 0; i < constraints.size(); i++)
                     {
-                        if(consBuff.at<Eigen::Vector4f>(j, i)(2) > 0 &&
-                           consBuff.at<Eigen::Vector4f>(j, i)(2) < maxDepthProcessed &&
-                           timesBuff.at<unsigned short>(j, i) > 0)
+                        globalDeformation.addConstraint(constraints.at(i).sourcePoint,
+                                                        constraints.at(i).targetPoint,
+                                                        tick,
+                                                        ferns.frames.at(ferns.lastClosest)->srcTime,
+                                                        true);
+                    }
+
+                    // TODO: recheck when the relativeCons is not empty
+                    for(size_t i = 0; i < relativeCons.size(); i++)
+                    {
+                        globalDeformation.addConstraint(relativeCons.at(i));
+                    }
+
+                    if(globalDeformation.constrain(ferns.frames, rawGraph, tick, true, poseGraph, true))
+                    {
+                        currPose = recoveryPose;
+
+                        poseMatches.push_back(PoseMatch(ferns.lastClosest,
+                                                        ferns.frames.size(), ferns.frames.at(ferns.lastClosest)->pose, currPose, constraints, true));
+
+                        fernDeforms += rawGraph.size() > 0;
+
+                        fernAccepted = true;
+                    }
+                }
+            }
+
+            //If we didn't match to a fern
+            if(!lost && closeLoops && rawGraph.size() == 0)
+            {
+                // Only predict old view, since we just predicted the current view for the ferns (which failed!)
+                // Give everything of the world frame to the old_buffer
+                TICK("IndexMap::INACTIVE");
+                indexMap.combinedPredict(currPose,
+                                         globalModel.model(),
+                                         maxDepthProcessed,
+                                         confidenceThreshold,
+                                         0,
+                                         tick - timeDelta, // the time bigger than the nearest timeDelta time will be discarded
+                                         timeDelta,
+                                         IndexMap::INACTIVE);
+                TOCK("IndexMap::INACTIVE");
+
+                //WARNING initICP* must be called before initRGB*
+                modelToModel.initICPModel(indexMap.oldVertexTex(), indexMap.oldNormalTex(), maxDepthProcessed, currPose);
+                modelToModel.initRGBModel(indexMap.oldImageTex());
+
+                modelToModel.initICP(indexMap.vertexTex(), indexMap.normalTex(), maxDepthProcessed);
+                modelToModel.initRGB(indexMap.imageTex());
+
+                Eigen::Vector3f trans = currPose.topRightCorner(3, 1);
+                Eigen::Matrix<float, 3, 3, Eigen::RowMajor> rot = currPose.topLeftCorner(3, 3);
+
+                // use vertices before 200 frames estimate the rotation and transformation of the current 200 frames
+                modelToModel.getIncrementalTransformation(trans,
+                                                          rot,
+                                                          false,
+                                                          10,
+                                                          pyramid,
+                                                          fastOdom,
+                                                          false);
+
+                Eigen::MatrixXd covar = modelToModel.getCovariance();
+                bool covOk = true;
+
+                auto t = tick;
+                for(int i = 0; i < 6; i++)
+                {
+                    if(covar(i, i) > covThresh)
+                    {
+                        covOk = false;
+                        break;
+                    }
+                }
+
+                Eigen::Matrix4f estPose = Eigen::Matrix4f::Identity();
+
+                estPose.topRightCorner(3, 1) = trans;
+                estPose.topLeftCorner(3, 3) = rot;
+
+                if(covOk && modelToModel.lastICPCount > icpCountThresh && modelToModel.lastICPError < icpErrThresh)
+                {
+
+                    resize.vertex(indexMap.vertexTex(), consBuff);
+                    resize.time(indexMap.oldTimeTex(), timesBuff);
+
+                    for(int i = 0; i < consBuff.cols; i++)
+                    {
+                        for(int j = 0; j < consBuff.rows; j++)
                         {
-                            Eigen::Vector4f worldRawPoint = currPose * Eigen::Vector4f(consBuff.at<Eigen::Vector4f>(j, i)(0),
-                                                                                       consBuff.at<Eigen::Vector4f>(j, i)(1),
-                                                                                       consBuff.at<Eigen::Vector4f>(j, i)(2),
-                                                                                       1.0f);
+                            if(consBuff.at<Eigen::Vector4f>(j, i)(2) > 0 &&
+                               consBuff.at<Eigen::Vector4f>(j, i)(2) < maxDepthProcessed &&
+                               timesBuff.at<unsigned short>(j, i) > 0)
+                            {
+                                Eigen::Vector4f worldRawPoint = currPose * Eigen::Vector4f(consBuff.at<Eigen::Vector4f>(j, i)(0),
+                                                                                           consBuff.at<Eigen::Vector4f>(j, i)(1),
+                                                                                           consBuff.at<Eigen::Vector4f>(j, i)(2),
+                                                                                           1.0f);
 
-                            Eigen::Vector4f worldModelPoint = estPose * Eigen::Vector4f(consBuff.at<Eigen::Vector4f>(j, i)(0),
-                                                                                        consBuff.at<Eigen::Vector4f>(j, i)(1),
-                                                                                        consBuff.at<Eigen::Vector4f>(j, i)(2),
-                                                                                        1.0f);
+                                Eigen::Vector4f worldModelPoint = estPose * Eigen::Vector4f(consBuff.at<Eigen::Vector4f>(j, i)(0),
+                                                                                            consBuff.at<Eigen::Vector4f>(j, i)(1),
+                                                                                            consBuff.at<Eigen::Vector4f>(j, i)(2),
+                                                                                            1.0f);
 
-                            constraints.push_back(Ferns::SurfaceConstraint(worldRawPoint, worldModelPoint));
+                                constraints.push_back(Ferns::SurfaceConstraint(worldRawPoint, worldModelPoint));
 
-                            localDeformation.addConstraint(worldRawPoint,
-                                                           worldModelPoint,
-                                                           tick,
-                                                           timesBuff.at<unsigned short>(j, i),
-                                                           deforms == 0);
+                                localDeformation.addConstraint(worldRawPoint,
+                                                               worldModelPoint,
+                                                               tick,
+                                                               timesBuff.at<unsigned short>(j, i),
+                                                               deforms == 0);
+                            }
+                        }
+                    }
+
+                    std::vector<Deformation::Constraint> newRelativeCons;
+
+                    if(localDeformation.constrain(ferns.frames, rawGraph, tick, false, poseGraph, false, &newRelativeCons))
+                    {
+                        poseMatches.push_back(PoseMatch(ferns.frames.size() - 1, ferns.frames.size(), estPose, currPose, constraints, false));
+
+                        deforms += rawGraph.size() > 0;
+
+                        currPose = estPose;
+
+                        for(size_t i = 0; i < newRelativeCons.size(); i += newRelativeCons.size() / 3)
+                        {
+                            relativeCons.push_back(newRelativeCons.at(i));
                         }
                     }
                 }
-
-                std::vector<Deformation::Constraint> newRelativeCons;
-
-                if(localDeformation.constrain(ferns.frames, rawGraph, tick, false, poseGraph, false, &newRelativeCons))
-                {
-                    poseMatches.push_back(PoseMatch(ferns.frames.size() - 1, ferns.frames.size(), estPose, currPose, constraints, false));
-
-                    deforms += rawGraph.size() > 0;
-
-                    currPose = estPose;
-
-                    for(size_t i = 0; i < newRelativeCons.size(); i += newRelativeCons.size() / 3)
-                    {
-                        relativeCons.push_back(newRelativeCons.at(i));
-                    }
-                }
             }
-          }
+        }
 
         if(!rgbOnly && trackingOk && !lost)
         {
@@ -943,13 +952,15 @@ void ElasticFusion::processFrame(const unsigned char * rgb,
 
     TICK("sampleGraph");
 
-    // sample 1/5000 vertices, maximum is 1024 vertices
-    // give all the poses and times to the graphNodes in the def
-    localDeformation.sampleGraphModel(globalModel.model());
+    if (deformation) {
+        // sample 1/5000 vertices, maximum is 1024 vertices
+        // give all the poses and times to the graphNodes in the def
+        localDeformation.sampleGraphModel(globalModel.model());
 
-    // sample 1/5 vertices of the localDeformation.graphPosePoints
-    // initialize def
-    globalDeformation.sampleGraphFrom(localDeformation);
+        // sample 1/5 vertices of the localDeformation.graphPosePoints
+        // initialize def
+        globalDeformation.sampleGraphFrom(localDeformation);
+    }
 
     TOCK("sampleGraph");
 

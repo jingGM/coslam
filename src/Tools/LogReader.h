@@ -86,6 +86,8 @@ class LogReader
         unsigned char * rgb;
         std::vector<unsigned char *> globalRGB;
         int currentFrame;
+        std::vector<double> camPose={0,0,0,0,0,0};
+        std::vector<std::vector<double>> globalCamPoses;
 
     protected:
         Bytef * decompressionBufferDepth;

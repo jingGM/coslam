@@ -336,8 +336,8 @@ void GlobalModel::fuse(const Eigen::Matrix4f & pose,
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     //TODO: need to prove this is correct:
-    Eigen::Matrix4f t_inv = pose.inverse();
-//    Eigen::Matrix4f t_inv = pose;
+//    Eigen::Matrix4f t_inv = pose.inverse();
+    Eigen::Matrix4f t_inv = pose;
 
     dataProgram->Bind();
 

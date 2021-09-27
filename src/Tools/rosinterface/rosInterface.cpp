@@ -20,8 +20,6 @@ rosInterface::rosInterface(dataInterfacePtr  dataIfPtr,const int &surveillanceNu
         surveillanceSubscribers.push_back(sub);
     }
     rosThread = std::thread(&rosInterface::ros_total_spin, this);
-
-
 }
 
 

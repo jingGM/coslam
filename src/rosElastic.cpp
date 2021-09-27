@@ -47,6 +47,7 @@ rosElastic::rosElastic(int argc, char **argv): good(true),
     frameToFrameRGB = Parse::get().arg(argc, argv, "-ftf", empty) > -1;
     rewind = Parse::get().arg(argc, argv, "-r", empty) > -1;
     reloc = Parse::get().arg(argc, argv, "-rl", empty) > -1;
+    deformation = (Parse::get().arg(argc, argv, "-df", empty) > -1);
 
     openLoop = groundTruthFile.length() > 0 && Parse::get().arg(argc, argv, "-o", empty) > -1;
     frameskip = Parse::get().arg(argc, argv, "-fs", empty) > -1;
@@ -60,27 +61,27 @@ rosElastic::rosElastic(int argc, char **argv): good(true),
         GlobalCamInfo::getInstance(640, 480, 457, 457, 320, 224, 1);
     }
 
-    if (logMode == "simulation") initializeROSInterface(argc, argv);
-    initializeLogger();
+    initializeLogger(argc, argv);
     initializeGUI();
     initializeEfusion();
 }
 
-void rosElastic::initializeROSInterface(int argc, char **argv) {
-    ros::init(argc, argv, "ros_efusion");
-    dataInferPtr = std::make_shared<DataInterface>(globalCamNum);
-    rosInterPtr = std::make_shared<rosInterface>(dataInferPtr, globalCamNum);
-}
-
-void rosElastic::initializeLogger() {
-    if(logFile.length()) logMode = "record";
+void rosElastic::initializeLogger(int argc, char **argv) {
+//    if(logFile.length()) logMode = "record";
 
     if (logMode=="simulation")
     {
-        logReader = std::make_shared<ROSLogReader>(logFile, flipColors, globalCamOn, dataInferPtr, globalTimeDiff);
+        ros::init(argc, argv, "ros_efusion");
+        dataInferPtr = std::make_shared<DataInterface>(globalCamNum);
+        rosInterPtr = std::make_shared<rosInterface>(dataInferPtr, globalCamNum);
+        logReader = std::make_shared<ROSLogReader>(logFile, flipColors, globalCamOn, false, dataInferPtr, globalTimeDiff);
+    }
+    else if(logMode == "simrecord") {
+        logReader = std::make_shared<ROSLogReader>(logFile, flipColors, globalCamOn, true, dataInferPtr, globalTimeDiff);
     }
     else if(logMode=="record")
     {
+        assert((logFile.length()));
         logReader = std::make_shared<RawLogReader>(logFile, flipColors, globalCamOn);
     }
     else
@@ -110,6 +111,12 @@ void rosElastic::initializeGUI(){
 }
 
 void rosElastic::initializeEfusion() {
+    std::vector<std::vector<double>> globalCamPoses;
+    if (globalCamOn) {
+        for (int i=0;i<globalCamNum; i++) {
+            globalCamPoses.push_back(logReader->globalCamPoses[i]);
+        }
+    }
     eFusion = std::make_shared<ElasticFusion>(openLoop ? std::numeric_limits<int>::max() / 2 : timeDelta,
                                               icpCountThresh,
                                               icpErrThresh,
@@ -126,7 +133,9 @@ void rosElastic::initializeEfusion() {
                                               so3,
                                               frameToFrameRGB,
                                               logReader->getFile(),
-                                              globalCamOn);
+                                              globalCamOn,
+                                              deformation,
+                                              globalCamPoses);
 }
 
 void rosElastic::run() {
@@ -474,7 +483,7 @@ void rosElastic::run() {
     }
 }
 
-void rosElastic::test_run() {
+void rosElastic::global_run() {
     while(!pangolin::ShouldQuit() && !(!logReader->hasMore() && quiet) && !(eFusion->getTick() == end && quiet))
     {
         if(!gui->pause->Get() || pangolin::Pushed(*gui->step))
@@ -568,6 +577,7 @@ void rosElastic::test_run() {
 
         TICK("GUI");
 
+        // calculate the position of camera
         if(gui->followPose->Get())
         {
             pangolin::OpenGlMatrix mv;
@@ -835,12 +845,13 @@ void rosElastic::test_run() {
     }
 }
 
+
 void rosElastic::test_GUI() {
     while(!pangolin::ShouldQuit() && (logReader->hasMore() || !quiet) )
     {
         std::cout<< "testing pangolin" <<std::endl;
         if(!gui->pause->Get() || pangolin::Pushed(*gui->step)) {
-            logReader->getNext();
+            logReader->getNext(globalCamOn);
         }
 
         if(gui->followPose->Get()) {
@@ -881,15 +892,15 @@ void rosElastic::test_GUI() {
         }
 
         gui->preCall();
-        std::stringstream stri;
-        stri << "test string i";
-        gui->trackInliers->Ref().Set(stri.str());
-//        glColor3f(1, 1, 0);
-        std::stringstream stre;
-        stre << "test string e";
-        gui->trackRes->Ref().Set(stre.str());
-        gui->resLog.Log(0.0002, 0.00001);
-        gui->inLog.Log(20000, 30000);
+//        std::stringstream stri;
+//        stri << "test string i";
+//        gui->trackInliers->Ref().Set(stri.str());
+////        glColor3f(1, 1, 0);
+//        std::stringstream stre;
+//        stre << "test string e";
+//        gui->trackRes->Ref().Set(stre.str());
+//        gui->resLog.Log(0.0002, 0.00001);
+//        gui->inLog.Log(20000, 30000);
 
 //        eFusion->getIndexMap().renderDepth(gui->depthCutoff->Get());
         std::map<std::string, GPUTexture*> textures;
@@ -901,15 +912,41 @@ void rosElastic::test_GUI() {
                                                    true,
                                                    true);
         textures[GPUTexture::RGB]->texture->Upload(logReader->rgb, GL_RGB, GL_UNSIGNED_BYTE);
+
+
+        textures[GPUTexture::DEPTH_RAW] = new GPUTexture(LocalCameraInfo::getInstance().width(),
+                                                         LocalCameraInfo::getInstance().height(),
+                                                         GL_LUMINANCE16UI_EXT,
+                                                         GL_LUMINANCE_INTEGER_EXT,
+                                                         GL_UNSIGNED_SHORT);
+        textures[GPUTexture::DEPTH_NORM] = new GPUTexture(LocalCameraInfo::getInstance().width(),
+                                                          LocalCameraInfo::getInstance().height(),
+                                                          GL_LUMINANCE,
+                                                          GL_LUMINANCE,
+                                                          GL_FLOAT,
+                                                          true);
+        textures[GPUTexture::DEPTH_RAW]->texture->Upload(logReader->depth, GL_LUMINANCE_INTEGER_EXT, GL_UNSIGNED_SHORT);
+        std::map<std::string, ComputePack*> computePacks;
+        computePacks[ComputePack::NORM] = new ComputePack(loadProgramFromFile("empty.vert", "depth_norm.frag", "quad.geom"),
+                                                          textures[GPUTexture::DEPTH_NORM]->texture);
+        std::vector<Uniform> uniforms;
+        uniforms.push_back(Uniform("maxVal", gui->depthCutoff->Get() * 1000.f));
+        uniforms.push_back(Uniform("minVal", 0.3f * 1000.f));
+        computePacks[ComputePack::NORM]->compute(textures[GPUTexture::DEPTH_RAW]->texture, &uniforms);
+
+
+        textures[GPUTexture::GLOBAL_RAW] = new GPUTexture(LocalCameraInfo::getInstance().width(),
+                                                   LocalCameraInfo::getInstance().height(),
+                                                   GL_RGBA,
+                                                   GL_RGB,
+                                                   GL_UNSIGNED_BYTE,
+                                                   true,
+                                                   true);
+        textures[GPUTexture::GLOBAL_RAW]->texture->Upload(logReader->globalRGB[0], GL_RGB, GL_UNSIGNED_BYTE);
+
         gui->displayImg(GPUTexture::RGB, textures[GPUTexture::RGB]);
-//        textures[GPUTexture::DEPTH_RAW] = new GPUTexture(LocalCameraInfo::getInstance().width(),
-//                                                         LocalCameraInfo::getInstance().height(),
-//                                                         GL_LUMINANCE16UI_EXT,
-//                                                         GL_LUMINANCE_INTEGER_EXT,
-//                                                         GL_UNSIGNED_SHORT,
-//                                                         true);
-//        textures[GPUTexture::DEPTH_RAW]->texture->Upload(logReader->depth, GL_LUMINANCE_INTEGER_EXT, GL_UNSIGNED_SHORT);
-//        gui->displayImg(GPUTexture::DEPTH_RAW, textures[GPUTexture::DEPTH_RAW]);
+        gui->displayImg(GPUTexture::DEPTH_NORM, textures[GPUTexture::DEPTH_NORM]);
+        gui->displayImg(GPUTexture::GLOBAL_RAW, textures[GPUTexture::GLOBAL_RAW]);
 
         gui->postCall();
     }

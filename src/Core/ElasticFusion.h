@@ -38,7 +38,9 @@ public:
                   const bool so3 = true,
                   const bool frameToFrameRGB = false,
                   const std::string fileName = "",
-                  const bool useGlobalCam = false);
+                  const bool useGlobalCam = false,
+                  const bool deformation = true,
+                  const std::vector<std::vector<double>> globalPose={});
 
     virtual ~ElasticFusion();
 
@@ -257,6 +259,7 @@ private:
 
     RGBDOdometry frameToModel;
     RGBDOdometry modelToModel;
+    RGBDOdometry globalToModel;
 
     int tick;
     const int timeDelta;
@@ -286,6 +289,7 @@ private:
 
     int deforms;
     int fernDeforms;
+    bool deformation;
 
     bool frameToFrameRGB;
 
@@ -316,6 +320,8 @@ private:
 
     Deformation localDeformation;
     Deformation globalDeformation;
+
+    std::vector<std::vector<double>> globalCamPose;
 };
 
 typedef std::shared_ptr<ElasticFusion> ElasticFusionPtr;

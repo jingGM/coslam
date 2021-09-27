@@ -51,8 +51,9 @@ GUI::GUI(bool liveCap, bool showcaseMode)
     pangolin::Display(GPUTexture::DEPTH_NORM).SetAspect(640.0f / 480.0f);
 
     pangolin::Display("ModelImg").SetAspect(640.0f / 480.0f);
+    pangolin::Display(GPUTexture::GLOBAL_RAW).SetAspect(640.0f / 480.0f);
 
-    pangolin::Display("Global").SetAspect(640.0f / 480.0f);
+//    pangolin::Display("Global").SetAspect(640.0f / 480.0f);
 
     std::vector<std::string> labels;
     labels.push_back(std::string("residual"));
@@ -78,7 +79,7 @@ GUI::GUI(bool liveCap, bool showcaseMode)
                 .AddDisplay(pangolin::Display(GPUTexture::RGB))
                 .AddDisplay(pangolin::Display(GPUTexture::DEPTH_NORM))
                 .AddDisplay(pangolin::Display("ModelImg"))
-                .AddDisplay(pangolin::Display(GPUTexture::GLOBAL_FILTERED))
+                .AddDisplay(pangolin::Display(GPUTexture::GLOBAL_RAW))
                 .AddDisplay(*resPlot)
                 .AddDisplay(*inPlot);
     }

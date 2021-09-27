@@ -25,7 +25,6 @@ const std::string GPUTexture::DEPTH_METRIC = "DEPTH_METRIC";
 const std::string GPUTexture::DEPTH_METRIC_FILTERED = "DEPTH_METRIC_FILTERED";
 const std::string GPUTexture::DEPTH_NORM = "DEPTH_NORM";
 const std::string GPUTexture::GLOBAL_RAW = "GLOBAL_RAW";
-const std::string GPUTexture::GLOBAL_FILTERED = "GLOBAL_FILTERED";
 
 GPUTexture::GPUTexture(const int width,
                        const int height,

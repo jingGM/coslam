@@ -28,13 +28,13 @@
   <arg name="ns0"        default="rgb0"/>
   <include file="$(find coslam)/launch/rgb.launch">
     <arg name="ns"           value="$(arg ns0)"/>
-    <arg name="x"            value="4.6"/>
-    <arg name="y"            value="10"/>
-    <arg name="z"            value="7"/>
+    <arg name="x"            value="-4.4"/>
+    <arg name="y"            value="-0.4"/>
+    <arg name="z"            value="5"/>
     <arg name="cam_roll"     value="0"/>
     <arg name="cam_pitch"    value="$(arg PI_4)"/>
     <arg name="cam_yaw"      value="0"/>
-    <arg name="base_yaw"     value="-$(arg PI_4_3)"/>
+    <arg name="base_yaw"     value="$(arg PI_4)"/>
   </include>
 
   <!-- <arg name="ns1"        default="rgb1"/>

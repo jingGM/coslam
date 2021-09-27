@@ -7,7 +7,7 @@
 
 #include "ros/ros.h"
 #include <sstream>
-#include<string>
+#include <string>
 #include <thread>
 
 #include "std_msgs/String.h"

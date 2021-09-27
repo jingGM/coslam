@@ -21,7 +21,6 @@
 
 #include <cassert>
 
-//#include "../Defines.h"
 
 class GlobalCamInfo
 {

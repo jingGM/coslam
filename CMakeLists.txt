@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.19)
+cmake_minimum_required(VERSION 3.10)
 project(coslam)
 
 set(CMAKE_CXX_STANDARD 14)
@@ -29,8 +29,8 @@ set(tools
         src/Tools/GroundTruthOdometry.h src/Tools/GroundTruthOdometry.cpp)
 set(utils
         src/Utils/GlobalCamInfo.h src/Utils/GlobalCamInfo.cpp
-        src/Utils/Img.h src/Utils/Stopwatch.h
         src/Utils/LocalCameraInfo.h src/Utils/LocalCameraInfo.cpp
+        src/Utils/Img.h src/Utils/Stopwatch.h
         src/Utils/Parse.h src/Utils/Parse.cpp
         src/Utils/DeformationGraph.h src/Utils/DeformationGraph.cpp
         src/Utils/GraphNode.h
@@ -44,7 +44,8 @@ set(gldisplay
         src/GLDisplay/FeedbackBuffer.h src/GLDisplay/FeedbackBuffer.cpp
         src/GLDisplay/GlobalModel.h src/GLDisplay/GlobalModel.cpp
         src/GLDisplay/IndexMap.h src/GLDisplay/IndexMap.cpp
-        src/GLDisplay/FillIn.h src/GLDisplay/FillIn.cpp)
+        src/GLDisplay/FillIn.h src/GLDisplay/FillIn.cpp
+        src/GLDisplay/GlobalCamTexture.h)
 set(cudas
         src/Core/cuda/convenience.cuh
         src/Core/cuda/operators.cuh
@@ -77,6 +78,7 @@ find_package(catkin REQUIRED COMPONENTS
         sensor_msgs
         std_msgs
         cv_bridge
+        tf
         )
 find_package(Boost REQUIRED COMPONENTS system)
 find_package(OpenCV REQUIRED)
@@ -149,5 +151,41 @@ target_link_libraries(ros_efusion
         ${LAPACK_LIBRARIES}
         )
 
-#add_executable(test_rosinterface src/test/rosinterface.cpp ${INTERFACE})
-#target_link_libraries(test_rosinterface ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+#set(rosutils
+#        src/Utils/GlobalCamInfo.h src/Utils/GlobalCamInfo.cpp
+#        src/Utils/LocalCameraInfo.h src/Utils/LocalCameraInfo.cpp)
+#add_executable(collect_data src/Tools/rosinterface/collectdata.cpp ${INTERFACE} ${rosutils})
+#target_link_libraries(collect_data ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+#
+#add_executable(test_rosinterface src/test/rosinterface.cpp ${INTERFACE} ${tools} ${utils})
+#target_link_libraries(test_rosinterface ${catkin_LIBRARIES}
+#        ${Boost_LIBRARIES}
+#        ${EXTRA_WINDOWS_LIBS}
+#        ${ZLIB_LIBRARY}
+#        ${Pangolin_LIBRARIES}
+#        ${CUDA_LIBRARIES}
+#        ${EXTRA_LIBS}
+#        ${OPENNI2_LIBRARY}
+#        ${SUITESPARSE_LIBRARIES}
+#        ${BLAS_LIBRARIES}
+#        ${LAPACK_LIBRARIES})
+#
+#add_executable(smalltest src/test/small.cpp)
+
+#add_executable(realsenseData src/test/realsense/saveData.cpp
+#        src/test/realsense/DataCollection.h
+#        src/test/realsense/DataCollection.cpp)
+#target_link_libraries(realsenseData
+#        ${catkin_LIBRARIES}
+#        ${Boost_LIBRARIES}
+#        ${EXTRA_WINDOWS_LIBS}
+#        ${ZLIB_LIBRARY}
+#        ${Pangolin_LIBRARIES}
+#        ${CUDA_LIBRARIES}
+#        ${EXTRA_LIBS}
+#        ${OPENNI2_LIBRARY}
+#        ${SUITESPARSE_LIBRARIES}
+#        ${BLAS_LIBRARIES}
+#        ${LAPACK_LIBRARIES}
+#        ${OpenCV_LIBS}
+#        )

@@ -28,11 +28,10 @@ public:
 
     // TODO: need to comment out when release
     void test_GUI();
-    void test_run();
+    void global_run();
 
 private:
-    void initializeROSInterface(int argc, char **argv);
-    void initializeLogger();
+    void initializeLogger(int argc, char **argv);
     void initializeGUI();
     void initializeEfusion();
 
@@ -75,7 +74,8 @@ private:
             showcaseMode,
             openLoop,
             rewind,
-            reloc
+            reloc,
+            deformation
             ;
 };
 

@@ -166,6 +166,10 @@ bool DataInterface::dataReady() const {
         std::cout<<"waiting for data "<<std::endl;
         rate.sleep();
     }
+
+    transR.waitForTransform(fNames.robotTargetFrame, fNames.robotSourceFrame, ros::Time(), ros::Duration(2.0));
+    for (int i=0; i<cameraNum;i++)
+        transG.waitForTransform(fNames.globalTargetFrame[i], fNames.globalSourceFrame[i], ros::Time(), ros::Duration(2.0));
 }
 
 cv::Mat DataInterface::getSurveillanceRGB(int index) {
@@ -206,5 +210,26 @@ const unsigned char *DataInterface::getSurveillanceRGBPtr(int index) {
 
 uint64_t DataInterface::getSurveillanceTimeStamp(int index) const {
     return globalTimeStamp[index];
+}
+
+std::vector<double> DataInterface::getCamTransform() {
+    double rR, rP, rY;
+    tf::StampedTransform robotTransform;
+
+    transR.lookupTransform(fNames.robotTargetFrame, fNames.robotSourceFrame, ros::Time(), robotTransform);
+
+    tf::Vector3 vR = robotTransform.getOrigin();
+
+    robotTransform.getBasis().getRPY(rR, rP, rY);
+    return {vR.getX(), vR.getY(), vR.getZ(), rR, rP, rY};
+}
+
+std::vector<double> DataInterface::getSurveillanceTransform(int index) {
+    double gR, gP, gY;
+    tf::StampedTransform globalTransform;
+    transG.lookupTransform(fNames.globalTargetFrame[index], fNames.globalSourceFrame[index], ros::Time(), globalTransform);
+    tf::Vector3 vG = globalTransform.getOrigin();
+    globalTransform.getBasis().getRPY(gR, gP, gY);
+    return {vG.getX(), vG.getY(), vG.getZ(), gR, gP, gY};
 }
 

@@ -4,9 +4,10 @@
 
 #include "ROSLogReader.h"
 
-ROSLogReader::ROSLogReader(std::string file, bool flipColors, bool glc, dataInterfacePtr dataPointer, int64_t timeDiff):
+ROSLogReader::ROSLogReader(std::string file, bool flipColors, bool glc, bool record, dataInterfacePtr dataPointer, int64_t timeDiff):
 LogReader(file, flipColors, glc),
 globalCamOn(glc),
+record(record),
 dataPtr(dataPointer),
 frequency(timeDiff)
 {
@@ -19,7 +20,30 @@ frequency(timeDiff)
         }
     }
 
-    dataPointer->dataReady();
+    currentFrame = 0;
+
+    if (!record) dataPointer->dataReady();
+
+    recordFile.open(file.c_str());
+
+    if (record) {
+        double x,y,z,r,p,ya;
+        recordFile.read(reinterpret_cast<char *>(&x), sizeof(double));
+        recordFile.read(reinterpret_cast<char *>(&y), sizeof(double));
+        recordFile.read(reinterpret_cast<char *>(&z), sizeof(double));
+        recordFile.read(reinterpret_cast<char *>(&r), sizeof(double));
+        recordFile.read(reinterpret_cast<char *>(&p), sizeof(double));
+        recordFile.read(reinterpret_cast<char *>(&ya), sizeof(double));
+        globalCamPoses.push_back({x,y,z,r,p,ya});
+
+        globalImageSize = GlobalCamInfo::getInstance().numPixels() * 3;
+        auto * globalTmpImg = new unsigned char[globalImageSize];
+        globalImageReadBuffer.push_back(globalTmpImg);
+        recordFile.read(reinterpret_cast<char *>(globalImageReadBuffer[0]), globalImageSize);
+        memcpy(&(decompressionBufferGlobalImages[0][0]), globalImageReadBuffer[0], globalImageSize);
+        globalRGB[0] = (unsigned char *)&decompressionBufferGlobalImages[0][0];
+        delete [] globalTmpImg;
+    }
 }
 
 ROSLogReader::~ROSLogReader()
@@ -31,23 +55,55 @@ ROSLogReader::~ROSLogReader()
             delete [] decompressionBufferGlobalImages[i];
         }
     }
+
+//    fclose(fp);
+    recordFile.close();
 }
 
 void ROSLogReader::getNext(bool gRGB) {
-    if(gRGB) {
-        assert(useGlobalCam && "you didn't initialize global cameras!");
+    if (record) {
+        imageSize = LocalCameraInfo::getInstance().numPixels() * 3;
+        depthSize = LocalCameraInfo::getInstance().numPixels() * 2;
 
-        for (int i=0; i<GlobalCamInfo::getInstance().camNumber(); i++) {
-            memcpy(&decompressionBufferGlobalImages[i][0], dataPtr->getSurveillanceRGBPtr(i), GlobalCamInfo::getInstance().numPixels() * 3);
-            globalRGB[i] = (unsigned char *)&decompressionBufferGlobalImages[i][0];
-        }
-        globalImageSize = GlobalCamInfo::getInstance().numPixels() * 3;
+        recordFile.read(reinterpret_cast<char*>(&lastFrameTime), sizeof(int64_t));
+
+        double x,y,z,r,p,ya;
+        recordFile.read(reinterpret_cast<char *>(&x), sizeof(double));
+        recordFile.read(reinterpret_cast<char *>(&y), sizeof(double));
+        recordFile.read(reinterpret_cast<char *>(&z), sizeof(double));
+        recordFile.read(reinterpret_cast<char *>(&r), sizeof(double));
+        recordFile.read(reinterpret_cast<char *>(&p), sizeof(double));
+        recordFile.read(reinterpret_cast<char *>(&ya), sizeof(double));
+        camPose = {x,y,z,r,p,ya};
+
+        imageReadBuffer = new unsigned char[imageSize];
+        recordFile.read(reinterpret_cast<char *>(imageReadBuffer), imageSize);
+        memcpy(&decompressionBufferImage[0], imageReadBuffer, imageSize);
+
+        depthReadBuffer = new unsigned char[depthSize];
+        recordFile.read(reinterpret_cast<char *>(depthReadBuffer), depthSize);
+        memcpy(&decompressionBufferDepth[0], depthReadBuffer, depthSize);
+//        std::cout<<gRGB<<std::endl;
     }
+    else {
+        if(gRGB) {
+            assert(useGlobalCam && "you didn't initialize global cameras!");
 
-    memcpy(&decompressionBufferDepth[0], dataPtr->getDepthPtr(), LocalCameraInfo::getInstance().numPixels() * 2);
-    memcpy(&decompressionBufferImage[0], dataPtr->getRGBPtr(),LocalCameraInfo::getInstance().numPixels() * 3);
+            for (int i=0; i<GlobalCamInfo::getInstance().camNumber(); i++) {
+                memcpy(&decompressionBufferGlobalImages[i][0], dataPtr->getSurveillanceRGBPtr(i), GlobalCamInfo::getInstance().numPixels() * 3);
+                globalRGB[i] = (unsigned char *)&decompressionBufferGlobalImages[i][0];
+                globalCamPoses.clear();
+                globalCamPoses.push_back(dataPtr->getSurveillanceTransform(i));
+            }
+        }
 
-    lastFrameTime = dataPtr->getTimeStamp();
+        memcpy(&decompressionBufferDepth[0], dataPtr->getDepthPtr(), LocalCameraInfo::getInstance().numPixels() * 2);
+        memcpy(&decompressionBufferImage[0], dataPtr->getRGBPtr(),LocalCameraInfo::getInstance().numPixels() * 3);
+
+        lastFrameTime = dataPtr->getTimeStamp();
+
+        camPose = dataPtr->getCamTransform();
+    }
 
     timestamp = lastFrameTime;
 
@@ -56,6 +112,7 @@ void ROSLogReader::getNext(bool gRGB) {
 
     imageSize = LocalCameraInfo::getInstance().numPixels() * 3;
     depthSize = LocalCameraInfo::getInstance().numPixels() * 2;
+    globalImageSize = GlobalCamInfo::getInstance().numPixels() * 3;
 
     if(flipColors)
     {
@@ -64,10 +121,6 @@ void ROSLogReader::getNext(bool gRGB) {
             std::swap(rgb[i + 0], rgb[i + 2]);
         }
     }
+    currentFrame++;
 }
 
-void ROSLogReader::calculateGlobalCam() {
-    for (int i=0; i<GlobalCamInfo::getInstance().camNumber(); i++) {
-
-    }
-}

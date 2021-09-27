@@ -94,3 +94,46 @@ ros_efusion -lm simulation
   conda deactivate
 	rosrun teleop_twist_keyboard teleop_twist_keyboard.py
 ```
+
+
+#### run realsense
+bring up the realsense camera
+```
+roslaunch realsense2_camera rs_camera.launch
+```
+
+
+
+#####install realsense:
+Install realsense SDK from https://github.com/IntelRealSense/librealsense/releases
+
+Install realsense packages:https://github.com/IntelRealSense/librealsense/tree/master/doc
+- For UBUNTU
+```
+sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-key F6E65AC044F831AC80A06380C8B3A55A6F3EFCDE || sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-key F6E65AC044F831AC80A06380C8B3A55A6F3EFCDE
+sudo add-apt-repository "deb https://librealsense.intel.com/Debian/apt-repo $(lsb_release -cs) main" -u
+sudo apt-get install librealsense2-dkms
+sudo apt-get install librealsense2-utils
+```
+- Check installation
+```
+realsense-viewer
+```
+```modinfo uvcvideo | grep "version:"``` should include realsense string
+
+- Update packages
+```
+sudo apt-get update
+sudo apt-get upgrade
+```
+
+Install REALSENSE ROS
+```
+mkdir -p ~/Documents/catkinws/realsense/src
+cd ~/Documents/catkinws/realsense/src
+git clone https://github.com/IntelRealSense/realsense-ros
+cd ..
+catkin_make
+echo "source ~/Documents/catkinws/realsense/devel/setup.bash" >> ~/.bashrc
+source ~/.bashrc
+```
