@@ -23,15 +23,8 @@ in vec2 texcoord;
 out vec4 FragColor;
 
 uniform sampler2D eSampler;
-uniform sampler2D rSampler;
-uniform int passthrough;
 
 void main()
 {
-    vec4 sample = texture2D(eSampler, texcoord.xy);
-
-    if(sample.x + sample.y + sample.z == 0 || passthrough == 1)
-        FragColor = texture2D(rSampler, texcoord.xy);
-    else
-        FragColor = sample;
+    FragColor = texture2D(eSampler, texcoord.xy);
 }

@@ -6,16 +6,15 @@
 #include "../Utils/LocalCameraInfo.h"
 #include "../Utils/GlobalCamInfo.h"
 #include "../Tools/ROSLogReader.h"
+#include "../Tools/RawLogReader.h"
 #include "../Tools/rosinterface/rosInterface.h"
 #include "../Tools/rosinterface/dataInterface.h"
 #include "tf/transform_listener.h"
 #include "ros/ros.h"
+#include <zconf.h>
+#include <opencv2/highgui.hpp>
 
-int main(int argc, char *argv[])
-{
-    LocalCameraInfo::getInstance(528, 528, 320, 240, 640, 480);
-    GlobalCamInfo::getInstance(640, 480, 457, 457, 320, 224, 1);
-
+void testROS(int argc, char *argv[]) {
     ros::init(argc, argv, "ros_efusion");
     auto dataInferPtr = std::make_shared<DataInterface>(1);
     auto rosInterPtr = std::make_shared<rosInterface>(dataInferPtr, 1);
@@ -48,6 +47,44 @@ int main(int argc, char *argv[])
         std::cout<< ros::Time::now().toSec()<< vR << vG<< std::endl;
 
     }
+}
+
+void showRGB(unsigned char * image) {
+    cv::Mat newimage;
+    newimage= cv::Mat(480,640,CV_8UC3);
+    memcpy(newimage.data, image, 640*480*3);
+    cv::namedWindow("rgb",cv::WINDOW_AUTOSIZE);
+    cv::imshow("rgb",newimage);
+    cv::waitKey(0);
+}
+void showDepth(unsigned short * image) {
+    cv::Mat newimage;
+    newimage= cv::Mat(480,640,CV_16UC1);
+    memcpy(newimage.data, image, 640*480*2);
+    cv::namedWindow("rgb",cv::WINDOW_AUTOSIZE);
+    cv::imshow("rgb",newimage);
+    cv::waitKey(0);
+}
+
+void testRawLogger() {
+    std::string logFile = "/home/jing/Documents/catkinws/slam/src/coslam/dataset/realsense/";
+    LogReaderPtr logReader = std::make_shared<RawLogReader>(logFile, false, true, true);
+
+    logReader->getNext(false);
+    for (int i=0;i<100; i++) {
+        showRGB(logReader->rgb);
+        showDepth(logReader->depth);
+    }
+
+}
+
+int main(int argc, char *argv[])
+{
+    LocalCameraInfo::getInstance(528, 528, 320, 240, 640, 480);
+    GlobalCamInfo::getInstance(640, 480, 457, 457, 320, 224, 1);
+
+//    testROS(argc,argv);
+    testRawLogger();
     return 0;
 }
 

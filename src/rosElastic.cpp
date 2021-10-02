@@ -4,12 +4,12 @@
 
 #include "rosElastic.h"
 
+
+
 rosElastic::rosElastic(int argc, char **argv): good(true),
                                                framesToSkip(0),
                                                resetButton(false)
                                                {
-    LocalCameraInfo::getInstance(528, 528, 320, 240, 640, 480);
-
     confidence = 10.0f;
     depth = 3.0f;
     icp = 10.0f;
@@ -48,6 +48,7 @@ rosElastic::rosElastic(int argc, char **argv): good(true),
     rewind = Parse::get().arg(argc, argv, "-r", empty) > -1;
     reloc = Parse::get().arg(argc, argv, "-rl", empty) > -1;
     deformation = (Parse::get().arg(argc, argv, "-df", empty) > -1);
+    realsense = (Parse::get().arg(argc, argv, "-rs", empty) > -1);
 
     openLoop = groundTruthFile.length() > 0 && Parse::get().arg(argc, argv, "-o", empty) > -1;
     frameskip = Parse::get().arg(argc, argv, "-fs", empty) > -1;
@@ -57,8 +58,11 @@ rosElastic::rosElastic(int argc, char **argv): good(true),
     globalCamOn = Parse::get().arg(argc,argv,"-gl",empty) > -1;
     Parse::get().arg(argc, argv, "-gf", globalTimeDiff);
 
+    LocalCameraInfo::getInstance(613.6345825195312, 613.6775512695312, 314.1249084472656, 246.6942138671875, 640, 480);
+//    LocalCameraInfo::getInstance(528, 528, 320, 240, 640, 480);
     if (globalCamOn){
-        GlobalCamInfo::getInstance(640, 480, 457, 457, 320, 224, 1);
+        GlobalCamInfo::getInstance(640, 480, 613.6345825195312, 613.6775512695312, 314.1249084472656, 246.6942138671875, 1);
+//        GlobalCamInfo::getInstance(640, 480, 457, 457, 320, 224, 1);
     }
 
     initializeLogger(argc, argv);
@@ -82,7 +86,7 @@ void rosElastic::initializeLogger(int argc, char **argv) {
     else if(logMode=="record")
     {
         assert((logFile.length()));
-        logReader = std::make_shared<RawLogReader>(logFile, flipColors, globalCamOn);
+        logReader = std::make_shared<RawLogReader>(logFile, flipColors, globalCamOn, realsense);
     }
     else
     {
@@ -111,12 +115,12 @@ void rosElastic::initializeGUI(){
 }
 
 void rosElastic::initializeEfusion() {
-    std::vector<std::vector<double>> globalCamPoses;
-    if (globalCamOn) {
-        for (int i=0;i<globalCamNum; i++) {
-            globalCamPoses.push_back(logReader->globalCamPoses[i]);
-        }
-    }
+//    std::vector<std::vector<double>> globalCamPoses;
+//    if (globalCamOn) {
+//        for (int i=0;i<globalCamNum; i++) {
+//            globalCamPoses.push_back(logReader->globalCamPoses[i]);
+//        }
+//    }
     eFusion = std::make_shared<ElasticFusion>(openLoop ? std::numeric_limits<int>::max() / 2 : timeDelta,
                                               icpCountThresh,
                                               icpErrThresh,
@@ -134,12 +138,10 @@ void rosElastic::initializeEfusion() {
                                               frameToFrameRGB,
                                               logReader->getFile(),
                                               globalCamOn,
-                                              deformation,
-                                              globalCamPoses);
+                                              deformation);
 }
 
 void rosElastic::run() {
-
     while(!pangolin::ShouldQuit() && !(!logReader->hasMore() && quiet) && !(eFusion->getTick() == end && quiet))
     {
         if(!gui->pause->Get() || pangolin::Pushed(*gui->step))
@@ -935,8 +937,8 @@ void rosElastic::test_GUI() {
         computePacks[ComputePack::NORM]->compute(textures[GPUTexture::DEPTH_RAW]->texture, &uniforms);
 
 
-        textures[GPUTexture::GLOBAL_RAW] = new GPUTexture(LocalCameraInfo::getInstance().width(),
-                                                   LocalCameraInfo::getInstance().height(),
+        textures[GPUTexture::GLOBAL_RAW] = new GPUTexture(GlobalCamInfo::getInstance().width(),
+                                                          GlobalCamInfo::getInstance().height(),
                                                    GL_RGBA,
                                                    GL_RGB,
                                                    GL_UNSIGNED_BYTE,
@@ -949,5 +951,8 @@ void rosElastic::test_GUI() {
         gui->displayImg(GPUTexture::GLOBAL_RAW, textures[GPUTexture::GLOBAL_RAW]);
 
         gui->postCall();
+
+        std::cout<<""<<std::endl;
     }
 }
+

@@ -75,7 +75,8 @@ private:
             openLoop,
             rewind,
             reloc,
-            deformation
+            deformation,
+            realsense
             ;
 };
 

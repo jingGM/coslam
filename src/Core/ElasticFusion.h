@@ -12,10 +12,12 @@
 #include "../GLDisplay/FeedbackBuffer.h"
 #include "../GLDisplay/GlobalModel.h"
 #include "../GLDisplay/FillIn.h"
+#include "../GLDisplay/GlobalCamTexture.h"
 #include "../Utils/LocalCameraInfo.h"
 #include "../Utils/GlobalCamInfo.h"
 #include "../Utils/Stopwatch.h"
 #include "RGBDOdometry.h"
+#include "GlobalOdometry.h"
 #include "Ferns.h"
 #include "Deformation.h"
 #include "PoseMatch.h"
@@ -39,8 +41,7 @@ public:
                   const bool frameToFrameRGB = false,
                   const std::string fileName = "",
                   const bool useGlobalCam = false,
-                  const bool deformation = true,
-                  const std::vector<std::vector<double>> globalPose={});
+                  const bool deformation = true);
 
     virtual ~ElasticFusion();
 
@@ -259,7 +260,7 @@ private:
 
     RGBDOdometry frameToModel;
     RGBDOdometry modelToModel;
-    RGBDOdometry globalToModel;
+    GlobalOdometry globalToModel;
 
     int tick;
     const int timeDelta;
@@ -311,6 +312,7 @@ private:
 
     FillIn fillIn;
     IndexMap indexMap;
+    GlobalCamTexture globalCamTex;
 
     Ferns ferns;
 

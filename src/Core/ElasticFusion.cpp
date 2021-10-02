@@ -8,8 +8,7 @@ ElasticFusion::ElasticFusion(const int timeDelta, const int countThresh, const f
                              const bool closeLoops, const bool iclnuim, const float photoThresh, const float confidence,
                              const float depthCut, const float icpThresh, const bool fastOdom, const bool reloc,
                              const float fernThresh, const bool so3, const bool frameToFrameRGB,
-                             const std::string fileName, const bool useGlobalCam, const bool deformation,
-                             const std::vector<std::vector<double>> globalPose)
+                             const std::string fileName, const bool useGlobalCam, const bool deformation)
 :   frameToModel(LocalCameraInfo::getInstance().width(),
                  LocalCameraInfo::getInstance().height(),
                  LocalCameraInfo::getInstance().cx(),
@@ -22,12 +21,7 @@ ElasticFusion::ElasticFusion(const int timeDelta, const int countThresh, const f
                  LocalCameraInfo::getInstance().cy(),
                  LocalCameraInfo::getInstance().fx(),
                  LocalCameraInfo::getInstance().fy()),
-    globalToModel(LocalCameraInfo::getInstance().width(),
-                  LocalCameraInfo::getInstance().height(),
-                  LocalCameraInfo::getInstance().cx(),
-                  LocalCameraInfo::getInstance().cy(),
-                  LocalCameraInfo::getInstance().fx(),
-                  LocalCameraInfo::getInstance().fy()),
+    globalToModel(),
     tick(1),
     timeDelta(timeDelta),
     icpCountThresh(countThresh),
@@ -64,8 +58,7 @@ ElasticFusion::ElasticFusion(const int timeDelta, const int countThresh, const f
     imageBuff(LocalCameraInfo::getInstance().rows() / consSample, LocalCameraInfo::getInstance().cols() / consSample),
     consBuff(LocalCameraInfo::getInstance().rows() / consSample, LocalCameraInfo::getInstance().cols() / consSample),
     timesBuff(LocalCameraInfo::getInstance().rows() / consSample, LocalCameraInfo::getInstance().cols() / consSample),
-    ferns(500, depthCut * 1000, photoThresh),
-    globalCamPose(globalPose)
+    ferns(500, depthCut * 1000, photoThresh)
 {
     createTextures();
     createCompute();
@@ -578,7 +571,9 @@ void ElasticFusion::processFrame(const unsigned char * rgb,
         // update lastNextImage[1,2] by shrink size of 2 and using Guassian kernel to compute.
         frameToModel.initFirstRGB(textures[GPUTexture::RGB]);
 
-        globalToModel.initFirstRGB(textures[GPUTexture::GLOBAL_RAW]);
+        if (useGlobalCam) {
+            globalToModel.initFirstRGB(textures[GPUTexture::GLOBAL_RAW]);
+        }
     }
     else
     {
@@ -695,9 +690,18 @@ void ElasticFusion::processFrame(const unsigned char * rgb,
             currPose = *inPose;
         }
 // TODO:
-//        if (useGlobalCam) {
-//            globalToModel.
-//        }
+        if (useGlobalCam) {
+            Eigen::Vector3f trans = currPose.topRightCorner(3, 1);
+            Eigen::Matrix<float, 3, 3, Eigen::RowMajor> rot = currPose.topLeftCorner(3, 3);
+
+            globalCamTex.image(textures[GPUTexture::GLOBAL_RAW]);
+            globalToModel.initRGBModel(globalCamTex.imageTex());
+            globalToModel.initRGB(textures[GPUTexture::RGB],
+                                  &fillIn.vertexTexture,
+                                  maxDepthProcessed);
+
+            globalToModel.getIncrementalTransformation(trans,rot, pyramid, fastOdom, so3);
+        }
 
         Eigen::Matrix4f diff = currPose.inverse() * lastPose;
 

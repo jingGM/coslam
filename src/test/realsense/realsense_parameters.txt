@@ -1,0 +1,49 @@
+depth:
+
+header:
+  seq: 28
+  stamp:
+    secs: 1632760603
+    nsecs:  76796055
+  frame_id: "camera_color_optical_frame"
+height: 480
+width: 640
+distortion_model: "plumb_bob"
+D: [0.0, 0.0, 0.0, 0.0, 0.0]
+K: [613.6345825195312, 0.0, 314.1249084472656, 0.0, 613.6775512695312, 246.6942138671875, 0.0, 0.0, 1.0]
+R: [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]
+P: [613.6345825195312, 0.0, 314.1249084472656, 0.0, 0.0, 613.6775512695312, 246.6942138671875, 0.0, 0.0, 0.0, 1.0, 0.0]
+binning_x: 0
+binning_y: 0
+roi:
+  x_offset: 0
+  y_offset: 0
+  height: 0
+  width: 0
+  do_rectify: False
+
+
+
+rgb:
+
+header:
+  seq: 9
+  stamp:
+    secs: 1632760642
+    nsecs: 171625614
+  frame_id: "camera_color_optical_frame"
+height: 480
+width: 640
+distortion_model: "plumb_bob"
+D: [0.0, 0.0, 0.0, 0.0, 0.0]
+K: [613.6345825195312, 0.0, 314.1249084472656, 0.0, 613.6775512695312, 246.6942138671875, 0.0, 0.0, 1.0]
+R: [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]
+P: [613.6345825195312, 0.0, 314.1249084472656, 0.0, 0.0, 613.6775512695312, 246.6942138671875, 0.0, 0.0, 0.0, 1.0, 0.0]
+binning_x: 0
+binning_y: 0
+roi:
+  x_offset: 0
+  y_offset: 0
+  height: 0
+  width: 0
+  do_rectify: False

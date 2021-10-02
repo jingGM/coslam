@@ -18,22 +18,57 @@
 
 #include "RawLogReader.h"
 
-RawLogReader::RawLogReader(std::string file, bool flipColors, bool glc)
- : LogReader(file, flipColors, glc)
+void showImage(unsigned char * image, bool rgb) {
+    cv::Mat newimage;
+    if (rgb) {
+        newimage= cv::Mat(480,640,CV_8UC3);
+        memcpy(newimage.data, &image[0], 640*480*3);
+    }
+    else {
+        newimage= cv::Mat(480,640,CV_16UC1);
+        memcpy(newimage.data, &image[0], 640*480*2);
+    }
+    cv::namedWindow("rgb",cv::WINDOW_AUTOSIZE);
+    cv::imshow("rgb",newimage);
+    cv::waitKey(0);
+}
+
+
+RawLogReader::RawLogReader(std::string file, bool flipColors, bool glc, bool realsense)
+ : LogReader(file, flipColors, glc), realsense(realsense)
 {
-    assert(pangolin::FileExists(file.c_str()));
-
-    fp = fopen(file.c_str(), "rb");
-
     currentFrame = 0;
-
-    auto tmp = fread(&numFrames,sizeof(int32_t),1,fp);
-    assert(tmp);
 
     depthReadBuffer = new unsigned char[numPixels * 2];
     imageReadBuffer = new unsigned char[numPixels * 3];
-    decompressionBufferDepth = new Bytef[LocalCameraInfo::getInstance().numPixels() * 2];
-    decompressionBufferImage = new Bytef[LocalCameraInfo::getInstance().numPixels() * 3];
+    decompressionBufferDepth = new Bytef[numPixels* 2];
+    decompressionBufferImage = new Bytef[numPixels * 3];
+
+    if(realsense) {
+        if (useGlobalCam){
+            std::string globalfile = file;
+            globalfile.append("oncefile.ply");
+            assert(pangolin::FileExists(globalfile.c_str()));
+            recordFile.open(globalfile.c_str());
+            recordFile.read(reinterpret_cast<char *>(&timestamp), sizeof (int64_t));
+            for (int i=0; i<GlobalCamInfo::getInstance().camNumber(); i++) {
+                decompressionBufferGlobalImages.push_back(new Bytef[GlobalCamInfo::getInstance().numPixels() * 3]);
+                globalRGB.push_back(nullptr);
+                recordFile.read(reinterpret_cast<char *>(&decompressionBufferGlobalImages[i][0]), GlobalCamInfo::getInstance().numPixels() * 3);
+                globalRGB[i] = (unsigned char *)&decompressionBufferGlobalImages[i][0];
+            }
+            recordFile.close();
+        }
+        file.append("walkingfiles.ply");
+        assert(pangolin::FileExists(file.c_str()));
+        recordFile.open(file.c_str());
+    } else {
+        assert(pangolin::FileExists(file.c_str()));
+        fp = fopen(file.c_str(), "rb");
+        auto tmp = fread(&numFrames,sizeof(int32_t),1,fp);
+        assert(tmp);
+    }
+
 }
 
 RawLogReader::~RawLogReader()
@@ -59,9 +94,33 @@ void RawLogReader::getBack()
 
 void RawLogReader::getNext(bool gRGB)
 {
-    filePointers.push(ftell(fp));
+    if (realsense) getRealsense();
+    else {
+        filePointers.push(ftell(fp));
+        getCore();
+    }
+}
 
-    getCore();
+void RawLogReader::getRealsense() {
+    recordFile.read(reinterpret_cast<char *>(&timestamp), sizeof(int64_t));
+    recordFile.read(reinterpret_cast<char *>(&decompressionBufferImage[0]), LocalCameraInfo::getInstance().numPixels()*3);
+    recordFile.read(reinterpret_cast<char *>(&decompressionBufferDepth[0]), LocalCameraInfo::getInstance().numPixels()*2);
+
+//    showImage(decompressionBufferImage, true);
+//    showImage(decompressionBufferDepth, false);
+
+    depth = (unsigned short *)decompressionBufferDepth;
+    rgb = (unsigned char *)decompressionBufferImage;
+
+    if(flipColors)
+    {
+        for(int i = 0; i < LocalCameraInfo::getInstance().numPixels() * 3; i += 3)
+        {
+            std::swap(rgb[i + 0], rgb[i + 2]);
+        }
+    }
+
+    currentFrame++;
 }
 
 void RawLogReader::getCore()
@@ -91,7 +150,7 @@ void RawLogReader::getCore()
     else
     {
         unsigned long decompLength = numPixels * 2;
-        uncompress(&decompressionBufferDepth[0], (unsigned long *)&decompLength, (const Bytef *)depthReadBuffer, depthSize);
+        uncompress(decompressionBufferDepth, (unsigned long *)&decompLength, (const Bytef *)depthReadBuffer, depthSize);
     }
 
 //    auto dpeth_image = &decompressionBufferDepth[0];
@@ -132,23 +191,29 @@ void RawLogReader::fastForward(int frame)
 {
     while(currentFrame < frame && hasMore())
     {
-        filePointers.push(ftell(fp));
-
-        auto tmp = fread(&timestamp,sizeof(int64_t),1,fp);
-        assert(tmp);
-
-        tmp = fread(&depthSize,sizeof(int32_t),1,fp);
-        assert(tmp);
-        tmp = fread(&imageSize,sizeof(int32_t),1,fp);
-        assert(tmp);
-
-        tmp = fread(depthReadBuffer,depthSize,1,fp);
-        assert(tmp);
-
-        if(imageSize > 0)
-        {
-            tmp = fread(imageReadBuffer,imageSize,1,fp);
+        if (realsense) {
+            recordFile.read(reinterpret_cast<char *>(&timestamp), sizeof(int64_t));
+            recordFile.read(reinterpret_cast<char *>(&decompressionBufferImage[0]), LocalCameraInfo::getInstance().numPixels()*2);
+            recordFile.read(reinterpret_cast<char *>(&decompressionBufferDepth[0]), LocalCameraInfo::getInstance().numPixels()*3);
+        }
+        else {
+            filePointers.push(ftell(fp));
+            auto tmp = fread(&timestamp,sizeof(int64_t),1,fp);
             assert(tmp);
+
+            tmp = fread(&depthSize,sizeof(int32_t),1,fp);
+            assert(tmp);
+            tmp = fread(&imageSize,sizeof(int32_t),1,fp);
+            assert(tmp);
+
+            tmp = fread(depthReadBuffer,depthSize,1,fp);
+            assert(tmp);
+
+            if(imageSize > 0)
+            {
+                tmp = fread(imageReadBuffer,imageSize,1,fp);
+                assert(tmp);
+            }
         }
 
         currentFrame++;
@@ -162,30 +227,35 @@ int RawLogReader::getNumFrames()
 
 bool RawLogReader::hasMore()
 {
-    return currentFrame + 1 < numFrames;
+    if(realsense) return recordFile.peek()!=EOF;
+    else return currentFrame + 1 < numFrames;
 }
 
 
 void RawLogReader::rewind()
 {
-    if (filePointers.size() != 0)
-    {
-        std::stack<int> empty;
-        std::swap(empty, filePointers);
+    if (realsense) {}
+    else{
+        if (filePointers.size() != 0)
+        {
+            std::stack<int> empty;
+            std::swap(empty, filePointers);
+        }
+
+        fclose(fp);
+        fp = fopen(file.c_str(), "rb");
+
+        auto tmp = fread(&numFrames,sizeof(int32_t),1,fp);
+        assert(tmp);
     }
-
-    fclose(fp);
-    fp = fopen(file.c_str(), "rb");
-
-    auto tmp = fread(&numFrames,sizeof(int32_t),1,fp);
-    assert(tmp);
 
     currentFrame = 0;
 }
 
 bool RawLogReader::rewound()
 {
-    return filePointers.size() == 0;
+    if (realsense) return currentFrame == 0;
+    else return filePointers.size() == 0;
 }
 
 const std::string RawLogReader::getFile()

@@ -32,11 +32,14 @@
 #include <string>
 #include <stack>
 #include <memory>
+#include <fstream>
+#include <zconf.h>
+#include <opencv2/highgui.hpp>
 
 class RawLogReader : public LogReader
 {
     public:
-        RawLogReader(std::string file, bool flipColors, bool glc);
+        RawLogReader(std::string file, bool flipColors, bool glc, bool realsense);
 
         virtual ~RawLogReader();
 
@@ -59,9 +62,13 @@ class RawLogReader : public LogReader
         void setAuto(bool value);
 
         std::stack<int> filePointers;
+        std::ifstream recordFile;
 
     private:
         void getCore();
+        void getRealsense();
+
+        bool realsense;
 };
 typedef std::shared_ptr<RawLogReader> RawLogReaderPtr;
 #endif /* RAWLOGREADER_H_ */

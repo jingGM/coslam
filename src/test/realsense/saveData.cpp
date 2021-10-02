@@ -13,7 +13,7 @@
 void saveFile(bool onece,
               const DataCollectionPtr& collectorPtr,
               std::string filename="rosrecord",
-              int timeLimit=100) {
+              int timeLimit=70) {
     auto depthSize = collectorPtr->depthSize, rgbSize = collectorPtr->rgbSize;
     Bytef * decompressionBufferDepth;
     Bytef * decompressionBufferImage;
@@ -31,10 +31,13 @@ void saveFile(bool onece,
         int64_t frameTime = collectorPtr->getTimeStamp();
         fpout.write (reinterpret_cast<const char*> (&frameTime), sizeof (int64_t));
 
+
         memcpy(&decompressionBufferImage[0], collectorPtr->getRGB().data, rgbSize);
+        fpout.write (reinterpret_cast<const char*> (&rgbSize), sizeof(int32_t));
         fpout.write (reinterpret_cast<const char*> (decompressionBufferImage), rgbSize);
 
         memcpy(&decompressionBufferDepth[0], collectorPtr->getDepth().data, depthSize);
+        fpout.write (reinterpret_cast<const char*> (&depthSize), sizeof(int32_t));
         fpout.write (reinterpret_cast<const char*> (decompressionBufferDepth), depthSize);
 
         std::cout<<ros::Time::now().toSec() - startTime<<std::endl;
@@ -90,14 +93,14 @@ void showImages(std::vector<int> rgbSize, std::vector<int> depthSize, std::strin
         recordFile.read(reinterpret_cast<char *>(&showTime), sizeof(int64_t));
         std::cout<< showTime<<std::endl;
 
-        recordFile.read(reinterpret_cast<char *>(&decompressionBufferImage[0]), sizeof(rgbSize[0]*rgbSize[1]*3));
-        memcpy(rgb.data,&decompressionBufferImage[0],sizeof(rgbSize[0]*rgbSize[1]*3));
+        recordFile.read(reinterpret_cast<char *>(&decompressionBufferImage[0]), rgbSize[0]*rgbSize[1]*3);
+        memcpy(rgb.data,&decompressionBufferImage[0],rgbSize[0]*rgbSize[1]*3);
         cv::namedWindow("rgb",cv::WINDOW_AUTOSIZE);
         cv::imshow("rgb",rgb);
         cv::waitKey(0);
 
-        recordFile.read(reinterpret_cast<char *>(&decompressionBufferDepth[0]), sizeof(depthSize[0]*depthSize[1]*2));
-        memcpy(depth.data,&decompressionBufferDepth[0],sizeof(depthSize[0]*depthSize[1]*2));
+        recordFile.read(reinterpret_cast<char *>(&decompressionBufferDepth[0]), depthSize[0]*depthSize[1]*2);
+        memcpy(depth.data,&decompressionBufferDepth[0],depthSize[0]*depthSize[1]*2);
         cv::namedWindow("depth",cv::WINDOW_AUTOSIZE);
         cv::imshow("depth",depth);
         cv::waitKey(0);
@@ -164,14 +167,14 @@ void testStream(DataCollectionPtr collectorPtr) {
 
 int main(int argc, char *argv[])
 {
-    ros::init(argc, argv, "realsense_collector");
-    auto collectorPtr = std::make_shared<DataCollection>();;
-    collectorPtr->dataReady();
-
+//    ros::init(argc, argv, "realsense_collector");
+//    auto collectorPtr = std::make_shared<DataCollection>();;
+//    collectorPtr->dataReady();
+//
 //    testStream(collectorPtr);
-    saveFile(false, collectorPtr, "walkingfile");
+//    saveFile(false, collectorPtr, "walkingfiles");
 //    testTime(collectorPtr, true);
-//    showImages(collectorPtr->rgbSizeV, collectorPtr->depthSizeV);
+    showImages({480,640},{480,640}, "walkingfile");
 
     return 0;
 }

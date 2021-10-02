@@ -99,7 +99,7 @@ ros_efusion -lm simulation
 #### run realsense
 bring up the realsense camera
 ```
-roslaunch realsense2_camera rs_camera.launch
+roslaunch realsense2_camera rs_aligned_depth.launch
 ```
 
 

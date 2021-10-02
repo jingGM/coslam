@@ -20,8 +20,8 @@
 struct TopicNames {
     std::string rgbImageTopic = "/camera/color/image_raw";
     std::string rgbCameraInfoTopic = "/camera/color/camera_info";
-    std::string depthImageTopic = "/camera/depth/image_rect_raw";
-    std::string depthCameraInfoTopic = "/camera/depth/camera_info";
+    std::string depthImageTopic = "/camera/aligned_depth_to_color/image_raw";
+    std::string depthCameraInfoTopic = "/camera/aligned_depth_to_color/camera_info";
 };
 
 class DataCollection {

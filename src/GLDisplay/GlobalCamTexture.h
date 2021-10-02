@@ -8,20 +8,21 @@
 #include "Shaders/Shaders.h"
 #include "Shaders/Uniform.h"
 #include "../Utils/LocalCameraInfo.h"
+#include "../Utils/GlobalCamInfo.h"
 #include "../Core/GPUTexture.h"
 
 class GlobalCamTexture
 {
 public:
-    GlobalCamTexture(): imageTexture(LocalCameraInfo::getInstance().width(),
-                                     LocalCameraInfo::getInstance().height(),
+    GlobalCamTexture(): imageTexture(GlobalCamInfo::getInstance().width(),
+                                     GlobalCamInfo::getInstance().height(),
                                      GL_RGBA,
                                      GL_RGB,
                                      GL_UNSIGNED_BYTE,
                                      false,
                                      true),
-                        imageProgram(loadProgramFromFile("empty.vert", "fill_rgb.frag", "quad.geom")),
-                        imageRenderBuffer(LocalCameraInfo::getInstance().width(), LocalCameraInfo::getInstance().height())
+                        imageProgram(loadProgramFromFile("empty.vert", "global_rgb.frag", "quad.geom")),
+                        imageRenderBuffer(GlobalCamInfo::getInstance().width(), GlobalCamInfo::getInstance().height())
     {
         imageFrameBuffer.AttachColour(*imageTexture.texture);
         imageFrameBuffer.AttachDepth(imageRenderBuffer);
@@ -29,7 +30,42 @@ public:
 
     virtual ~GlobalCamTexture(){};
 
-    void image(GPUTexture * existingRgb, GPUTexture * rawRgb, bool passthrough);
+    void image(GPUTexture * existingRgb){
+        imageFrameBuffer.Bind();
+
+        glPushAttrib(GL_VIEWPORT_BIT);
+
+        glViewport(0, 0, imageRenderBuffer.width, imageRenderBuffer.height);
+
+        glClearColor(0, 0, 0, 0);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        imageProgram->Bind();
+
+        imageProgram->setUniform(Uniform("eSampler", 0));
+
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, existingRgb->texture->tid);
+
+        glDrawArrays(GL_POINTS, 0, 1);
+
+        imageFrameBuffer.Unbind();
+
+        glBindTexture(GL_TEXTURE_2D, 0);
+
+        glActiveTexture(GL_TEXTURE0);
+
+        imageProgram->Unbind();
+
+        glPopAttrib();
+
+        glFinish();
+    }
+
+    GPUTexture * imageTex()
+    {
+        return &imageTexture;
+    }
 
     GPUTexture imageTexture;
 
@@ -37,9 +73,5 @@ public:
     pangolin::GlRenderBuffer imageRenderBuffer;     //
     pangolin::GlFramebuffer imageFrameBuffer;
 };
-
-void GlobalCamTexture::image(GPUTexture *existingRgb, GPUTexture *rawRgb, bool passthrough) {
-
-}
 
 #endif //COSLAM_GLOBALCAMTEXTURE_H

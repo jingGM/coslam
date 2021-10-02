@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.19)
 project(coslam)
 
 set(CMAKE_CXX_STANDARD 14)
@@ -64,11 +64,10 @@ set(cores
         src/Core/GPUTexture.h src/Core/GPUTexture.cpp
         src/Core/ElasticFusion.h src/Core/ElasticFusion.cpp
         src/Core/RGBDOdometry.h src/Core/RGBDOdometry.cpp
+        src/Core/GlobalOdometry.h src/Core/GlobalOdometry.cpp
         src/Core/Ferns.h src/Core/Ferns.cpp
         src/Core/Deformation.h src/Core/Deformation.cpp
         src/Core/PoseMatch.h)
-
-
 
 find_package(catkin REQUIRED COMPONENTS
         geometry_msgs
@@ -149,6 +148,7 @@ target_link_libraries(ros_efusion
         ${SUITESPARSE_LIBRARIES}
         ${BLAS_LIBRARIES}
         ${LAPACK_LIBRARIES}
+        ${OpenCV_LIBS}
         )
 
 #set(rosutils
@@ -156,7 +156,7 @@ target_link_libraries(ros_efusion
 #        src/Utils/LocalCameraInfo.h src/Utils/LocalCameraInfo.cpp)
 #add_executable(collect_data src/Tools/rosinterface/collectdata.cpp ${INTERFACE} ${rosutils})
 #target_link_libraries(collect_data ${catkin_LIBRARIES} ${Boost_LIBRARIES})
-#
+
 #add_executable(test_rosinterface src/test/rosinterface.cpp ${INTERFACE} ${tools} ${utils})
 #target_link_libraries(test_rosinterface ${catkin_LIBRARIES}
 #        ${Boost_LIBRARIES}
@@ -168,8 +168,10 @@ target_link_libraries(ros_efusion
 #        ${OPENNI2_LIBRARY}
 #        ${SUITESPARSE_LIBRARIES}
 #        ${BLAS_LIBRARIES}
-#        ${LAPACK_LIBRARIES})
-#
+#        ${LAPACK_LIBRARIES}
+#        ${OpenCV_LIBS}
+#        )
+
 #add_executable(smalltest src/test/small.cpp)
 
 #add_executable(realsenseData src/test/realsense/saveData.cpp
