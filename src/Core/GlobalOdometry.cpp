@@ -285,100 +285,94 @@ void GlobalOdometry::getIncrementalTransformation(Eigen::Vector3f &trans,
             }
         }
     }
-//
-//    iterations[0] = fastOdom ? 3 : 10;
-//    iterations[1] = pyramid ? 5 : 0;
-//    iterations[2] = pyramid ? 4 : 0;
-//
-//    Eigen::Matrix<float, 3, 3, Eigen::RowMajor> Rprev_inv = Rprev.inverse();
-//    mat33 device_Rprev_inv = Rprev_inv;
-//    float3 device_tprev = *reinterpret_cast<float3*>(tprev.data());
-//
-//    Eigen::Matrix<double, 4, 4, Eigen::RowMajor> resultRt = Eigen::Matrix<double, 4, 4, Eigen::RowMajor>::Identity();
-//
-//    if(so3)
-//    {
-//        for(int x = 0; x < 3; x++)
-//        {
-//            for(int y = 0; y < 3; y++)
-//            {
-//                resultRt(x, y) = resultR(x, y);
-//            }
-//        }
-//    }
-//
-//    for(int i = NUM_PYRS - 1; i >= 0; i--)
-//    {
-//        if(rgb)
-//        {
-//            projectToPointCloud(lastDepth[i], pointClouds[i], intr, i);
-//        }
-//
-//        Eigen::Matrix<double, 3, 3, Eigen::RowMajor> K = Eigen::Matrix<double, 3, 3, Eigen::RowMajor>::Zero();
-//
-//        K(0, 0) = intr(i).fx;
-//        K(1, 1) = intr(i).fy;
-//        K(0, 2) = intr(i).cx;
-//        K(1, 2) = intr(i).cy;
-//        K(2, 2) = 1;
-//
-//        lastRGBError = std::numeric_limits<float>::max();
-//
-//        for(int j = 0; j < iterations[i]; j++)
-//        {
-//            Eigen::Matrix<double, 4, 4, Eigen::RowMajor> Rt = resultRt.inverse();
-//
-//            Eigen::Matrix<double, 3, 3, Eigen::RowMajor> R = Rt.topLeftCorner(3, 3);
-//
-//            Eigen::Matrix<double, 3, 3, Eigen::RowMajor> KRK_inv = K * R * K.inverse();
-//            mat33 krkInv;
-//            memcpy(&krkInv.data[0], KRK_inv.cast<float>().eval().data(), sizeof(mat33));
-//
-//            Eigen::Vector3d Kt = Rt.topRightCorner(3, 1);
-//            Kt = K * Kt;
-//            float3 kt = {(float)Kt(0), (float)Kt(1), (float)Kt(2)};
-//
-//            int sigma = 0;
-//            int rgbSize = 0;
-//
-//            if(rgb)
-//            {
-//                TICK("computeRgbResidual");
-//                computeRgbResidual(pow(minimumGradientMagnitudes[i], 2.0) / pow(sobelScale, 2.0),
-//                                   nextdIdx[i],
-//                                   nextdIdy[i],
-//                                   lastDepth[i],
-//                                   nextDepth[i],
-//                                   lastImage[i],
-//                                   nextImage[i],
-//                                   corresImg[i],
-//                                   sumResidualRGB,
-//                                   maxDepthDeltaRGB,
-//                                   kt,
-//                                   krkInv,
-//                                   sigma,
-//                                   rgbSize,
-//                                   GPUConfig::getInstance().rgbResThreads,
-//                                   GPUConfig::getInstance().rgbResBlocks);
-//                TOCK("computeRgbResidual");
-//            }
-//
-//            float sigmaVal = std::sqrt((float)sigma / rgbSize == 0 ? 1 : rgbSize);
-//            float rgbError = std::sqrt(sigma) / (rgbSize == 0 ? 1 : rgbSize);
-//
-//            if(rgbOnly && rgbError > lastRGBError)
-//            {
-//                break;
-//            }
-//
-//            lastRGBError = rgbError;
-//            lastRGBCount = rgbSize;
-//
-//            if(rgbOnly)
-//            {
-//                sigmaVal = -1; //Signals the internal optimisation to weight evenly
-//            }
-//
+
+    iterations[0] = fastOdom ? 3 : 10;
+    iterations[1] = pyramid ? 5 : 0;
+    iterations[2] = pyramid ? 4 : 0;
+
+    Eigen::Matrix<float, 3, 3, Eigen::RowMajor> Rprev_inv = Rprev.inverse();
+    mat33 device_Rprev_inv = Rprev_inv;
+    float3 device_tprev = *reinterpret_cast<float3*>(tprev.data());
+
+    Eigen::Matrix<double, 4, 4, Eigen::RowMajor> resultRt = Eigen::Matrix<double, 4, 4, Eigen::RowMajor>::Identity();
+
+    if(so3)
+    {
+        for(int x = 0; x < 3; x++)
+        {
+            for(int y = 0; y < 3; y++)
+            {
+                resultRt(x, y) = resultR(x, y);
+            }
+        }
+    }
+
+    for(int i = NUM_PYRS - 1; i >= 0; i--)
+    {
+//        projectToPointCloud(lastDepth[i], pointClouds[i], gintr, i);
+
+        Eigen::Matrix<double, 3, 3, Eigen::RowMajor> K = Eigen::Matrix<double, 3, 3, Eigen::RowMajor>::Zero();
+
+        K(0, 0) = gintr(i).fx;
+        K(1, 1) = gintr(i).fy;
+        K(0, 2) = gintr(i).cx;
+        K(1, 2) = gintr(i).cy;
+        K(2, 2) = 1;
+
+        lastRGBError = std::numeric_limits<float>::max();
+
+        for(int j = 0; j < iterations[i]; j++)
+        {
+            Eigen::Matrix<double, 4, 4, Eigen::RowMajor> Rt = resultRt.inverse();
+
+            Eigen::Matrix<double, 3, 3, Eigen::RowMajor> R = Rt.topLeftCorner(3, 3);
+
+            Eigen::Matrix<double, 3, 3, Eigen::RowMajor> KRK_inv = K * R * K.inverse();
+            mat33 krkInv;
+            memcpy(&krkInv.data[0], KRK_inv.cast<float>().eval().data(), sizeof(mat33));
+
+            Eigen::Vector3d Kt = Rt.topRightCorner(3, 1);
+            Kt = K * Kt;
+            float3 kt = {(float)Kt(0), (float)Kt(1), (float)Kt(2)};
+
+            int sigma = 0;
+            int rgbSize = 0;
+
+            TICK("computeRgbResidual");
+            computeRgbResidual(pow(minimumGradientMagnitudes[i], 2.0) / pow(sobelScale, 2.0),
+                               nextdIdx[i],
+                               nextdIdy[i],
+                               lastDepth[i],
+                               nextDepth[i],
+                               lastImage[i],
+                               nextImage[i],
+                               corresImg[i],
+                               sumResidualRGB,
+                               maxDepthDeltaRGB,
+                               kt,
+                               krkInv,
+                               sigma,
+                               rgbSize,
+                               GPUConfig::getInstance().rgbResThreads,
+                               GPUConfig::getInstance().rgbResBlocks);
+            TOCK("computeRgbResidual");
+
+
+            float sigmaVal = std::sqrt((float)sigma / rgbSize == 0 ? 1 : rgbSize);
+            float rgbError = std::sqrt(sigma) / (rgbSize == 0 ? 1 : rgbSize);
+
+            if(rgbError > lastRGBError)
+            {
+                break;
+            }
+
+            lastRGBError = rgbError;
+            lastRGBCount = rgbSize;
+
+
+            sigmaVal = -1; //Signals the internal optimisation to weight evenly
+
+
 //            Eigen::Matrix<float, 6, 6, Eigen::RowMajor> A_icp;
 //            Eigen::Matrix<float, 6, 1> b_icp;
 //
@@ -419,62 +413,59 @@ void GlobalOdometry::getIncrementalTransformation(Eigen::Vector3f &trans,
 //
 //            lastICPError = sqrt(residual[0]) / residual[1];
 //            lastICPCount = residual[1];
-//
-//            Eigen::Matrix<float, 6, 6, Eigen::RowMajor> A_rgbd;
-//            Eigen::Matrix<float, 6, 1> b_rgbd;
-//
-//            if(rgb)
-//            {
-//                TICK("rgbStep");
-//                rgbStep(corresImg[i],
-//                        sigmaVal,
-//                        pointClouds[i],
-//                        intr(i).fx,
-//                        intr(i).fy,
-//                        nextdIdx[i],
-//                        nextdIdy[i],
-//                        sobelScale,
-//                        sumDataSE3,
-//                        outDataSE3,
-//                        A_rgbd.data(),
-//                        b_rgbd.data(),
-//                        GPUConfig::getInstance().rgbStepThreads,
-//                        GPUConfig::getInstance().rgbStepBlocks);
-//                TOCK("rgbStep");
-//            }
-//
-//            Eigen::Matrix<double, 6, 1> result;
-//            Eigen::Matrix<double, 6, 6, Eigen::RowMajor> dA_rgbd = A_rgbd.cast<double>();
-//            Eigen::Matrix<double, 6, 6, Eigen::RowMajor> dA_icp = A_icp.cast<double>();
-//            Eigen::Matrix<double, 6, 1> db_rgbd = b_rgbd.cast<double>();
-//            Eigen::Matrix<double, 6, 1> db_icp = b_icp.cast<double>();
-//
-//            lastA = dA_rgbd;
-//            lastb = db_rgbd;
-//            result = lastA.ldlt().solve(lastb);
-//
-//            Eigen::Isometry3f rgbOdom;
-//
-//            OdometryProvider::computeUpdateSE3(resultRt, result, rgbOdom);
-//
-//            Eigen::Isometry3f currentT;
-//            currentT.setIdentity();
-//            currentT.rotate(Rprev);
-//            currentT.translation() = tprev;
-//
-//            currentT = currentT * rgbOdom.inverse();
-//
-//            tcurr = currentT.translation();
-//            Rcurr = currentT.rotation();
-//        }
-//    }
-//
-//    if(rgb && (tcurr - tprev).norm() > 0.3)
-//    {
-//        Rcurr = Rprev;
-//        tcurr = tprev;
-//    }
-//
+
+            Eigen::Matrix<float, 6, 6, Eigen::RowMajor> A_rgbd;
+            Eigen::Matrix<float, 6, 1> b_rgbd;
+
+
+            TICK("rgbStep");
+            rgbStep(corresImg[i],
+                    sigmaVal,
+                    pointClouds[i],
+                    gintr(i).fx,
+                    gintr(i).fy,
+                    nextdIdx[i],
+                    nextdIdy[i],
+                    sobelScale,
+                    sumDataSE3,
+                    outDataSE3,
+                    A_rgbd.data(),
+                    b_rgbd.data(),
+                    GPUConfig::getInstance().rgbStepThreads,
+                    GPUConfig::getInstance().rgbStepBlocks);
+            TOCK("rgbStep");
+
+
+            Eigen::Matrix<double, 6, 1> result;
+            Eigen::Matrix<double, 6, 6, Eigen::RowMajor> dA_rgbd = A_rgbd.cast<double>();
+            Eigen::Matrix<double, 6, 1> db_rgbd = b_rgbd.cast<double>();
+
+            lastA = dA_rgbd;
+            lastb = db_rgbd;
+            result = lastA.ldlt().solve(lastb);
+
+            Eigen::Isometry3f rgbOdom;
+
+            OdometryProvider::computeUpdateSE3(resultRt, result, rgbOdom);
+
+            Eigen::Isometry3f currentT;
+            currentT.setIdentity();
+            currentT.rotate(Rprev);
+            currentT.translation() = tprev;
+
+            currentT = currentT * rgbOdom.inverse();
+
+            tcurr = currentT.translation();
+            Rcurr = currentT.rotation();
+        }
+    }
+
+    if((tcurr - tprev).norm() > 0.3)
+    {
+        Rcurr = Rprev;
+        tcurr = tprev;
+    }
+
 //    if(so3)
 //    {
 //        for(int i = 0; i < NUM_PYRS; i++)
@@ -482,9 +473,9 @@ void GlobalOdometry::getIncrementalTransformation(Eigen::Vector3f &trans,
 //            std::swap(lastNextImage[i], nextImage[i]);
 //        }
 //    }
-//
-//    trans = tcurr;
-//    rot = Rcurr;
+
+    trans = tcurr;
+    rot = Rcurr;
 }
 
 Eigen::MatrixXd GlobalOdometry::getCovariance() {
