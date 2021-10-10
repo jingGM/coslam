@@ -17,7 +17,6 @@
 #include "../Utils/GlobalCamInfo.h"
 #include "../Utils/Stopwatch.h"
 #include "RGBDOdometry.h"
-#include "GlobalOdometry.h"
 #include "Ferns.h"
 #include "Deformation.h"
 #include "PoseMatch.h"
@@ -260,7 +259,6 @@ private:
 
     RGBDOdometry frameToModel;
     RGBDOdometry modelToModel;
-    GlobalOdometry globalToModel;
 
     int tick;
     const int timeDelta;

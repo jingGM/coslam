@@ -21,7 +21,6 @@ ElasticFusion::ElasticFusion(const int timeDelta, const int countThresh, const f
                  LocalCameraInfo::getInstance().cy(),
                  LocalCameraInfo::getInstance().fx(),
                  LocalCameraInfo::getInstance().fy()),
-    globalToModel(),
     tick(1),
     timeDelta(timeDelta),
     icpCountThresh(countThresh),
@@ -572,7 +571,7 @@ void ElasticFusion::processFrame(const unsigned char * rgb,
         frameToModel.initFirstRGB(textures[GPUTexture::RGB]);
 
         if (useGlobalCam) {
-            globalToModel.initFirstRGB(textures[GPUTexture::GLOBAL_RAW]);
+
         }
     }
     else
@@ -695,12 +694,7 @@ void ElasticFusion::processFrame(const unsigned char * rgb,
             Eigen::Matrix<float, 3, 3, Eigen::RowMajor> rot = currPose.topLeftCorner(3, 3);
 
             globalCamTex.image(textures[GPUTexture::GLOBAL_RAW]);
-            globalToModel.initRGBModel(globalCamTex.imageTex());
-            globalToModel.initRGB(textures[GPUTexture::RGB],
-                                  &fillIn.vertexTexture,
-                                  maxDepthProcessed);
 
-            globalToModel.getIncrementalTransformation(trans,rot, pyramid, fastOdom, so3);
         }
 
         Eigen::Matrix4f diff = currPose.inverse() * lastPose;

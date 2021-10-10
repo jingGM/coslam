@@ -108,6 +108,56 @@ void showImages(std::vector<int> rgbSize, std::vector<int> depthSize, std::strin
     recordFile.close();
 }
 
+void convertToPics(std::vector<int> rgbSize, std::vector<int> depthSize,
+               std::string filename="rosrecord", const std::string& absPath="./",
+               bool global=false) {
+    filename.append(".ply");
+    std::string loadPath = absPath + filename;
+    std::ifstream recordFile;
+    recordFile.open(loadPath.c_str());
+
+    Bytef * decompressionBufferDepth;
+    Bytef * decompressionBufferImage;
+    decompressionBufferDepth = new Bytef[depthSize[0]*depthSize[1]*2];
+    decompressionBufferImage = new Bytef[rgbSize[0]*rgbSize[1]*3];
+
+    std::ofstream saveTimeFile;
+    std::string timeFilename = absPath + "timeFile.txt";
+    saveTimeFile.open(timeFilename.c_str());
+
+    int id = 0;
+    while (recordFile.peek()!=EOF) {
+        cv::Mat rgb(rgbSize[0], rgbSize[1], CV_8UC3);
+        cv::Mat depth(depthSize[0], depthSize[1],CV_16UC1);
+        int64_t showTime;
+        recordFile.read(reinterpret_cast<char *>(&showTime), sizeof(int64_t));
+        std::cout<< showTime<<std::endl;
+        saveTimeFile<<showTime<<"\n";
+
+
+        recordFile.read(reinterpret_cast<char *>(&decompressionBufferImage[0]), rgbSize[0]*rgbSize[1]*3);
+        memcpy(rgb.data,&decompressionBufferImage[0],rgbSize[0]*rgbSize[1]*3);
+        std::string savingFileName;
+        if(global)
+            savingFileName = absPath+"pics/global/rgb"+std::to_string(id) + ".png";
+        else
+            savingFileName = absPath+"pics/local/"+std::to_string(showTime) + ".png";
+        cv::imwrite(savingFileName.c_str(), rgb);
+
+        recordFile.read(reinterpret_cast<char *>(&decompressionBufferDepth[0]), depthSize[0]*depthSize[1]*2);
+        memcpy(depth.data,&decompressionBufferDepth[0],depthSize[0]*depthSize[1]*2);
+        if(global)
+            savingFileName = absPath+"pics/global/depth"+std::to_string(id) + ".png";
+        else
+            savingFileName = absPath+"pics/local/depth"+std::to_string(id) + ".png";
+        cv::imwrite(savingFileName.c_str(), depth);
+
+        id+=1;
+    }
+    saveTimeFile.close();
+    recordFile.close();
+}
+
 void testStream(DataCollectionPtr collectorPtr) {
     auto rgb= collectorPtr->getRGB();
     auto depth = collectorPtr->getDepth();
@@ -172,9 +222,16 @@ int main(int argc, char *argv[])
 //    collectorPtr->dataReady();
 //
 //    testStream(collectorPtr);
-//    saveFile(false, collectorPtr, "walkingfiles");
 //    testTime(collectorPtr, true);
-    showImages({480,640},{480,640}, "walkingfile");
+
+//    saveFile(false, collectorPtr, "walkingfiles");
+//    showImages({480,640},{480,640}, "oncefile");
+
+    convertToPics({480,640},{480,640},
+                  "walkingfiles",
+                  "/home/jing/Documents/catkinws/slam/src/coslam/dataset/realsense/", false);
+
+
 
     return 0;
 }

@@ -60,10 +60,10 @@ rosElastic::rosElastic(int argc, char **argv): good(true),
 
     LocalCameraInfo::getInstance(613.6345825195312, 613.6775512695312, 314.1249084472656, 246.6942138671875, 640, 480);
 //    LocalCameraInfo::getInstance(528, 528, 320, 240, 640, 480);
-    if (globalCamOn){
-        GlobalCamInfo::getInstance(640, 480, 613.6345825195312, 613.6775512695312, 314.1249084472656, 246.6942138671875, 1);
+//    if (globalCamOn){
+    GlobalCamInfo::getInstance(640, 480, 613.6345825195312, 613.6775512695312, 314.1249084472656, 246.6942138671875, 1);
 //        GlobalCamInfo::getInstance(640, 480, 457, 457, 320, 224, 1);
-    }
+//    }
 
     initializeLogger(argc, argv);
     initializeGUI();

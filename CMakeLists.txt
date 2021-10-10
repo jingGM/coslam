@@ -64,7 +64,6 @@ set(cores
         src/Core/GPUTexture.h src/Core/GPUTexture.cpp
         src/Core/ElasticFusion.h src/Core/ElasticFusion.cpp
         src/Core/RGBDOdometry.h src/Core/RGBDOdometry.cpp
-        src/Core/GlobalOdometry.h src/Core/GlobalOdometry.cpp
         src/Core/Ferns.h src/Core/Ferns.cpp
         src/Core/Deformation.h src/Core/Deformation.cpp
         src/Core/PoseMatch.h)
@@ -127,29 +126,29 @@ if(WIN32)
 endif()
 ###########################
 
-add_executable(ros_efusion main.cpp
-        ${INTERFACE}
-        ${ROSELASTIC}
-        ${tools}
-        ${utils}
-        ${gldisplay}
-        ${cores}
-        ${cuda_objs}
-        )
-target_link_libraries(ros_efusion
-        ${catkin_LIBRARIES}
-        ${Boost_LIBRARIES}
-        ${EXTRA_WINDOWS_LIBS}
-        ${ZLIB_LIBRARY}
-        ${Pangolin_LIBRARIES}
-        ${CUDA_LIBRARIES}
-        ${EXTRA_LIBS}
-        ${OPENNI2_LIBRARY}
-        ${SUITESPARSE_LIBRARIES}
-        ${BLAS_LIBRARIES}
-        ${LAPACK_LIBRARIES}
-        ${OpenCV_LIBS}
-        )
+#add_executable(ros_efusion main.cpp
+#        ${INTERFACE}
+#        ${ROSELASTIC}
+#        ${tools}
+#        ${utils}
+#        ${gldisplay}
+#        ${cores}
+#        ${cuda_objs}
+#        )
+#target_link_libraries(ros_efusion
+#        ${catkin_LIBRARIES}
+#        ${Boost_LIBRARIES}
+#        ${EXTRA_WINDOWS_LIBS}
+#        ${ZLIB_LIBRARY}
+#        ${Pangolin_LIBRARIES}
+#        ${CUDA_LIBRARIES}
+#        ${EXTRA_LIBS}
+#        ${OPENNI2_LIBRARY}
+#        ${SUITESPARSE_LIBRARIES}
+#        ${BLAS_LIBRARIES}
+#        ${LAPACK_LIBRARIES}
+#        ${OpenCV_LIBS}
+#        )
 
 #set(rosutils
 #        src/Utils/GlobalCamInfo.h src/Utils/GlobalCamInfo.cpp
@@ -174,20 +173,20 @@ target_link_libraries(ros_efusion
 
 #add_executable(smalltest src/test/small.cpp)
 
-#add_executable(realsenseData src/test/realsense/saveData.cpp
-#        src/test/realsense/DataCollection.h
-#        src/test/realsense/DataCollection.cpp)
-#target_link_libraries(realsenseData
-#        ${catkin_LIBRARIES}
-#        ${Boost_LIBRARIES}
-#        ${EXTRA_WINDOWS_LIBS}
-#        ${ZLIB_LIBRARY}
-#        ${Pangolin_LIBRARIES}
-#        ${CUDA_LIBRARIES}
-#        ${EXTRA_LIBS}
-#        ${OPENNI2_LIBRARY}
-#        ${SUITESPARSE_LIBRARIES}
-#        ${BLAS_LIBRARIES}
-#        ${LAPACK_LIBRARIES}
-#        ${OpenCV_LIBS}
-#        )
+add_executable(realsenseData src/test/realsense/saveData.cpp
+        src/test/realsense/DataCollection.h
+        src/test/realsense/DataCollection.cpp)
+target_link_libraries(realsenseData
+        ${catkin_LIBRARIES}
+        ${Boost_LIBRARIES}
+        ${EXTRA_WINDOWS_LIBS}
+        ${ZLIB_LIBRARY}
+        ${Pangolin_LIBRARIES}
+        ${CUDA_LIBRARIES}
+        ${EXTRA_LIBS}
+        ${OPENNI2_LIBRARY}
+        ${SUITESPARSE_LIBRARIES}
+        ${BLAS_LIBRARIES}
+        ${LAPACK_LIBRARIES}
+        ${OpenCV_LIBS}
+        )
