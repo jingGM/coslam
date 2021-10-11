@@ -49,21 +49,21 @@ int main() {
 //    string vocFile     = "/home/jing/Documents/catkinws/slam/test/dataset/ORBvoc.txt";
 //    string settingFile = "/home/jing/Documents/catkinws/slam/test/dataset/EuRoC.yaml";
 
-    string imagePathG   = "/home/jing/Documents/catkinws/slam/test/dataset/test_set/global/global.png";
-    string imagePathL   = "/home/jing/Documents/catkinws/slam/test/dataset/test_set/local";
-    string pathTimes   = "/home/jing/Documents/catkinws/slam/test/dataset/test_set/MH01.txt";
-    string vocFile     = "/home/jing/Documents/catkinws/slam/test/dataset/ORBvoc_no.txt";
-    string settingFile = "/home/jing/Documents/catkinws/slam/test/dataset/test_set/EuRoC.yaml";
+    string imagePathG   = "/home/jing/Documents/catkinws/slam/src/coslam/test/dataset/test_set/global/global.png";
+    string imagePathL   = "/home/jing/Documents/catkinws/slam/src/coslam/test/dataset/test_set/local";
+    string pathTimes   = "/home/jing/Documents/catkinws/slam/src/coslam/test/dataset/test_set/MH01.txt";
+    string vocFile     = "/home/jing/Documents/catkinws/slam/src/coslam/test/dataset/ORBvoc_no.txt";
+    string settingFile = "/home/jing/Documents/catkinws/slam/src/coslam/test/dataset/test_set/EuRoC.yaml";
 
     vector<string> vstrImageFilenames;
     vector<double> vTimestamps;
     LoadImages(imagePathL, pathTimes, vstrImageFilenames, vTimestamps);
     int nImages = vstrImageFilenames.size();
 
-    System SLAM(vocFile,settingFile);
     cv::Mat im;
-
     im = cv::imread(imagePathG, CV_LOAD_IMAGE_UNCHANGED);
+
+    System SLAM(vocFile,settingFile, true);
     double tframe = 0;
     SLAM.TrackCamera(im,tframe, true);
     for(int ni=0; ni<4; ni++) {

@@ -4,7 +4,7 @@
 
 #include "System.h"
 
-System::System(const string &strVocFile, const string &strSettingsFile) {
+System::System(const string &strVocFile, const string &strSettingsFile, const bool draw) {
     cv::FileStorage fsSettings(strSettingsFile.c_str(), cv::FileStorage::READ);
     if(!fsSettings.isOpened())
     {
@@ -24,7 +24,7 @@ System::System(const string &strVocFile, const string &strSettingsFile) {
     }
     cout << "Vocabulary loaded!" << endl << endl;
 
-    mpTracker = new Tracking(this, mpVocabulary, strSettingsFile);
+    mpTracker = new Tracking(this, mpVocabulary, strSettingsFile, draw);
 }
 
 cv::Mat System::TrackCamera(const cv::Mat &im, const double &timeStamp, const bool &isGlobal) {

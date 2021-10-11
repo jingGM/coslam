@@ -5,12 +5,14 @@
 
 using namespace std;
 
-Tracking::Tracking(System *pSys, ORBVocabulary *pVoc, const string &strSettingPath):
-        mState(NO_IMAGES_YET),mpORBVocabulary(pVoc),mpSystem(pSys) {
+Tracking::Tracking(System *pSys, ORBVocabulary *pVoc, const string &strSettingPath, bool draw):
+        mState(NO_IMAGES_YET),mpORBVocabulary(pVoc),mpSystem(pSys), draw(draw) {
     cv::FileStorage fSettings(strSettingPath, cv::FileStorage::READ);
     initializeIntrinsics(fSettings);
     initializeORBPrams(fSettings);
-
+    if (draw) {
+        drawer = Drawer(rows,cols);
+    }
 }
 
 void Tracking::initializeIntrinsics(const cv::FileStorage &fSettings) {
@@ -65,6 +67,9 @@ void Tracking::initializeIntrinsics(const cv::FileStorage &fSettings) {
         cout << "- color order: RGB (ignored if grayscale)" << endl;
     else
         cout << "- color order: BGR (ignored if grayscale)" << endl;
+
+    rows = fSettings["Camera.rows"];
+    cols = fSettings["Camera.cols"];
 }
 
 void Tracking::initializeORBPrams(const cv::FileStorage &fSettings) {
@@ -86,19 +91,20 @@ void Tracking::initializeORBPrams(const cv::FileStorage &fSettings) {
 
 cv::Mat Tracking::processImage(const cv::Mat &im, const double &timestamp, const bool& isGlobalFrame) {
     mImGray = im;
-    if(mImGray.channels()==3)
+    mImOrigin = im;
+    if(mImOrigin.channels()==3)
     {
         if(mbRGB)
-            cvtColor(mImGray,mImGray,CV_RGB2GRAY);
+            cvtColor(mImOrigin,mImGray,CV_RGB2GRAY);
         else
-            cvtColor(mImGray,mImGray,CV_BGR2GRAY);
+            cvtColor(mImOrigin,mImGray,CV_BGR2GRAY);
     }
-    else if(mImGray.channels()==4)
+    else if(mImOrigin.channels()==4)
     {
         if(mbRGB)
-            cvtColor(mImGray,mImGray,CV_RGBA2GRAY);
+            cvtColor(mImOrigin,mImGray,CV_RGBA2GRAY);
         else
-            cvtColor(mImGray,mImGray,CV_BGRA2GRAY);
+            cvtColor(mImOrigin,mImGray,CV_BGRA2GRAY);
     }
 
     if(isGlobalFrame){
@@ -113,6 +119,7 @@ cv::Mat Tracking::processImage(const cv::Mat &im, const double &timestamp, const
             std::cout<<"local features are not enough: <"<<localFeatureNThreshold<<std::endl;
             return cv::Mat();
         }
+
     }
     std::cout<<"useful keys: "<< mCurrentFrame.usefulN<<std::endl;
 
@@ -127,6 +134,10 @@ void Tracking::matchFrames(const bool& isGlobalFrame) {
         if (!mpInitializer) assert("Please initialize global image first");
         mLastProcessedState=mState;
         processLocal();
+    }
+
+    if(draw) {
+        drawer.showFrame();
     }
 
     // Store frame pose information to retrieve the complete camera trajectory afterwards.
@@ -166,13 +177,17 @@ void Tracking::initializeGlobal() {
 
     // 初始化为-1 表示没有任何匹配。这里面存储的是匹配的点的id
     fill(mvIniMatches.begin(),mvIniMatches.end(),-1);
+
+    if (draw) {
+        drawer.updateFrame(mImGray, mInitialFrame, mvIniMatches, true);
+    }
 }
 
 void Tracking::processLocal() {
     // Find correspondences
     // Step 3 在mInitialFrame与mCurrentFrame中找匹配的特征点对
     ORBmatcher matcher(
-            0.9,        //最佳的和次佳特征点评分的比值阈值，这里是比较宽松的，跟踪时一般是0.7
+            0.7,        //最佳的和次佳特征点评分的比值阈值，这里是比较宽松的，跟踪时一般是0.7
             true);      //检查特征点的方向
 
     // 对 mInitialFrame,mCurrentFrame 进行特征点匹配
@@ -186,10 +201,14 @@ void Tracking::processLocal() {
 
     // Check if there are enough correspondences
     // Step 4 验证匹配结果，如果初始化的两帧之间的匹配点太少
-    if(nmatches<10)
-    {
-        mCurrentFrame.mTcw = cv::Mat();
-        return;
+//    if(nmatches<10)
+//    {
+//        mCurrentFrame.mTcw = cv::Mat();
+//        return;
+//    }
+
+    if (draw) {
+        drawer.updateFrame(mImGray, mCurrentFrame, mvIniMatches, false);
     }
 
     cv::Mat Rcw; // Current Camera Rotation
@@ -197,38 +216,38 @@ void Tracking::processLocal() {
     vector<bool> vbTriangulated; // Triangulated Correspondences (mvIniMatches)
 
     // Step 5 通过H模型或F模型进行单目初始化，得到两帧间相对运动、初始MapPoints
-    if(mpInitializer->Initialize(
-            mCurrentFrame,      //当前帧
-            mvIniMatches,       //当前帧和参考帧的特征点的匹配关系
-            Rcw, tcw,           //初始化得到的相机的位姿
-            mvIniP3D,           //进行三角化得到的空间点集合
-            vbTriangulated))    //以及对应于mvIniMatches来讲,其中哪些点被三角化了
-    {
-        // Step 6 初始化成功后，删除那些无法进行三角化的匹配点
-        for(size_t i=0, iend=mvIniMatches.size(); i<iend;i++)
-        {
-            if(mvIniMatches[i]>=0 && !vbTriangulated[i])
-            {
-                mvIniMatches[i]=-1;
-                nmatches--;
-            }
-        }
-
-        // Set Frame Poses
-        // Step 7 将初始化的第一帧作为世界坐标系，因此第一帧变换矩阵为单位矩阵
-        mInitialFrame.SetPose(cv::Mat::eye(4,4,CV_32F));
-        // 由Rcw和tcw构造Tcw,并赋值给mTcw，mTcw为世界坐标系到相机坐标系的变换矩阵
-        cv::Mat Tcw = cv::Mat::eye(4,4,CV_32F);
-        Rcw.copyTo(Tcw.rowRange(0,3).colRange(0,3));
-        tcw.copyTo(Tcw.rowRange(0,3).col(3));
-        mCurrentFrame.SetPose(Tcw);
-
-        mLastFrame = Frame(mCurrentFrame);
-
-        // Step 8 创建初始化地图点MapPoints
-        // Initialize函数会得到mvIniP3D，
-        // mvIniP3D是cv::Point3f类型的一个容器，是个存放3D点的临时变量，
-        // CreateInitialMapMonocular将3D点包装成MapPoint类型存入KeyFrame和Map中
-//        CreateInitialMapMonocular();
-    }//当初始化成功的时候进行
+//    if(mpInitializer->Initialize(
+//            mCurrentFrame,      //当前帧
+//            mvIniMatches,       //当前帧和参考帧的特征点的匹配关系
+//            Rcw, tcw,           //初始化得到的相机的位姿
+//            mvIniP3D,           //进行三角化得到的空间点集合
+//            vbTriangulated))    //以及对应于mvIniMatches来讲,其中哪些点被三角化了
+//    {
+//        // Step 6 初始化成功后，删除那些无法进行三角化的匹配点
+//        for(size_t i=0, iend=mvIniMatches.size(); i<iend;i++)
+//        {
+//            if(mvIniMatches[i]>=0 && !vbTriangulated[i])
+//            {
+//                mvIniMatches[i]=-1;
+//                nmatches--;
+//            }
+//        }
+//
+//        // Set Frame Poses
+//        // Step 7 将初始化的第一帧作为世界坐标系，因此第一帧变换矩阵为单位矩阵
+//        mInitialFrame.SetPose(cv::Mat::eye(4,4,CV_32F));
+//        // 由Rcw和tcw构造Tcw,并赋值给mTcw，mTcw为世界坐标系到相机坐标系的变换矩阵
+//        cv::Mat Tcw = cv::Mat::eye(4,4,CV_32F);
+//        Rcw.copyTo(Tcw.rowRange(0,3).colRange(0,3));
+//        tcw.copyTo(Tcw.rowRange(0,3).col(3));
+//        mCurrentFrame.SetPose(Tcw);
+//
+//        mLastFrame = Frame(mCurrentFrame);
+//
+//        // Step 8 创建初始化地图点MapPoints
+//        // Initialize函数会得到mvIniP3D，
+//        // mvIniP3D是cv::Point3f类型的一个容器，是个存放3D点的临时变量，
+//        // CreateInitialMapMonocular将3D点包装成MapPoint类型存入KeyFrame和Map中
+////        CreateInitialMapMonocular();
+//    }//当初始化成功的时候进行
 }

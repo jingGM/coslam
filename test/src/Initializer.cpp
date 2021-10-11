@@ -144,6 +144,10 @@ bool Initializer::Initialize(const Frame &CurrentFrame, const vector<int> &vMatc
     threadH.join();
     threadF.join();
 
+    // TODO: for testing
+//    FindHomography(vbMatchesInliersH, SH, H);
+//    FindFundamental(vbMatchesInliersF, SF, F);
+
     // Compute ratio of scores
     // Step 4 计算得分比例来判断选取哪个模型来求位姿R,t
     //通过这个规则来判断谁的评分占比更多一些，注意不是简单的比较绝对评分大小，而是看评分的占比

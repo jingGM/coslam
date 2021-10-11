@@ -15,12 +15,13 @@
 #include "Frame.h"
 #include "Initializer.h"
 #include "ORBmatcher.h"
+#include "drawer/Drawer.h"
 
 class System;
 
 class Tracking {
 public:
-    Tracking(System* pSys, ORBVocabulary* pVoc, const string &strSettingPath);
+    Tracking(System* pSys, ORBVocabulary* pVoc, const string &strSettingPath, bool draw);
 
     cv::Mat processImage(const cv::Mat &im, const double &timestamp, const bool& isGlobalFrame);
 
@@ -36,6 +37,7 @@ public:
 
 //    Frame mCurrentFrame;
     cv::Mat mImGray;
+    cv::Mat mImOrigin;
 
 private:
     ORBextractor* mpIniORBextractor;
@@ -49,6 +51,9 @@ private:
     Frame mCurrentFrame;
     Frame mLastFrame;
     Frame mInitialFrame;
+
+    bool draw;
+    Drawer drawer;
 
     std::vector<int> mvIniLastMatches;
     std::vector<int> mvIniMatches;
@@ -66,6 +71,7 @@ private:
     cv::Mat mDistCoef;
     float mbf;
     bool mbRGB;
+    int rows,cols;
 
     int globalFeatureNThreshold = 200;
     int localFeatureNThreshold = 100;
@@ -80,6 +86,7 @@ private:
     void matchFrames(const bool& isGlobalFrame);
     void initializeGlobal();
     void processLocal();
+    void initializeDrawer();
 };
 
 

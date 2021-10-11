@@ -21,6 +21,9 @@ Camera.fps: 20.0
 # Color order of the images (0: BGR, 1: RGB. It is ignored if images are grayscale)
 Camera.RGB: 1
 
+Camera.rows: 480
+Camera.cols: 752
+
 #--------------------------------------------------------------------------------------------
 # ORB Parameters
 #--------------------------------------------------------------------------------------------

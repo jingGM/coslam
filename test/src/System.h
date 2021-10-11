@@ -13,7 +13,7 @@ class Tracking;
 
 class System {
 public:
-    System(const string &strVocFile, const string &strSettingsFile);
+    System(const string &strVocFile, const string &strSettingsFile, const bool draw);
     ORBVocabulary* mpVocabulary;
     cv::Mat TrackCamera(const cv::Mat &im, const double &timeStamp, const bool &isGlobal);
 private:

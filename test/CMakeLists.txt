@@ -11,6 +11,9 @@ include_directories(
         Thirdparty/g2o
 )
 
+set(drawer
+        src/drawer/FrameDrawer.h src/drawer/FrameDrawer.cpp
+        src/drawer/Drawer.h src/drawer/Drawer.cpp)
 set(source
         src/System.h src/System.cpp
         src/Tracking.h src/Tracking.cpp
@@ -19,10 +22,12 @@ set(source
         src/Initializer.h src/Initializer.cpp
         src/ORBmatcher.h src/ORBmatcher.cpp
         src/ORBVocabulary.h
+
         )
+
 set(CMAKE_CXX_STANDARD 14)
 
-add_executable(test main.cpp ${source})
+add_executable(test main.cpp ${source} ${drawer})
 target_link_libraries(test
         ${OpenCV_LIBS}
         ${EIGEN3_LIBS}
