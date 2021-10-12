@@ -21,8 +21,8 @@ set(source
         src/Frame.h src/Frame.cpp
         src/Initializer.h src/Initializer.cpp
         src/ORBmatcher.h src/ORBmatcher.cpp
+#        src/Converter.h src/Converter.cpp
         src/ORBVocabulary.h
-
         )
 
 set(CMAKE_CXX_STANDARD 14)

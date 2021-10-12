@@ -30,12 +30,12 @@ void Drawer::showFrame() {
     // show features:
     for (int i=0; i<globalFrame.N; i++) {
         cv::Point2f position(globalFrame.mvCurrentKeys[i].pt);
-        cv::circle(mIm,position,2,cv::Scalar(255,0,0),1);
+        cv::circle(mIm,position,2,cv::Scalar(0,0,255),1);
     }
     for (int i=0; i<localFrame.N; i++) {
         cv::Point2f position(localFrame.mvCurrentKeys[i].pt);
         position.y = position.y + rows;
-        cv::circle(mIm,position,2,cv::Scalar(255,0,0),1);
+        cv::circle(mIm,position,2,cv::Scalar(0,0,255),1);
     }
 
 

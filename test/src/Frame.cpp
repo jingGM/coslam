@@ -377,3 +377,37 @@ vector<size_t> Frame::GetFeaturesInArea(const float &x, const float  &y, const f
     return vIndices;
 }
 
+/**
+ * @brief 计算当前帧特征点对应的词袋Bow，主要是mBowVec 和 mFeatVec
+ *
+ */
+void Frame::ComputeBoW()
+{
+
+    // 判断是否以前已经计算过了，计算过了就跳过
+    if(mBowVec.empty())
+    {
+        // 将描述子mDescriptors转换为DBOW要求的输入格式
+        vector<cv::Mat> vCurrentDesc = toDescriptorVector(mDescriptors);
+        // 将特征点的描述子转换成词袋向量mBowVec以及特征向量mFeatVec
+        mpORBvocabulary->transform(vCurrentDesc,	//当前的描述子vector
+                                   mBowVec,			//输出，词袋向量，记录的是单词的id及其对应权重TF-IDF值
+                                   mFeatVec,		//输出，记录node id及其对应的图像 feature对应的索引
+                                   4);				//4表示从叶节点向前数的层数
+    }
+}
+
+std::vector<cv::Mat> Frame::toDescriptorVector(const cv::Mat &Descriptors)
+{
+    //存储转换结果的向量
+    std::vector<cv::Mat> vDesc;
+    //创建保留空间
+    vDesc.reserve(Descriptors.rows);
+    //对于每一个特征点的描述子
+    for (int j=0;j<Descriptors.rows;j++)
+        //从描述子这个矩阵中抽取出来存到向量中
+        vDesc.push_back(Descriptors.row(j));
+
+    //返回转换结果
+    return vDesc;
+}

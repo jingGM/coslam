@@ -11,3 +11,4 @@ OpenNI2
 .idea/*
 */idea/
 dataset/MH0/*
+dataset/ORBvoc.txt

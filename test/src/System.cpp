@@ -4,7 +4,7 @@
 
 #include "System.h"
 
-System::System(const string &strVocFile, const string &strSettingsFile, const bool draw) {
+System::System(const string &strVocFile, const string &strSettingsFile, const bool debug) {
     cv::FileStorage fsSettings(strSettingsFile.c_str(), cv::FileStorage::READ);
     if(!fsSettings.isOpened())
     {
@@ -24,11 +24,11 @@ System::System(const string &strVocFile, const string &strSettingsFile, const bo
     }
     cout << "Vocabulary loaded!" << endl << endl;
 
-    mpTracker = new Tracking(this, mpVocabulary, strSettingsFile, draw);
+    mpTracker = new Tracking(this, mpVocabulary, strSettingsFile, debug);
 }
 
-cv::Mat System::TrackCamera(const cv::Mat &im, const double &timeStamp, const bool &isGlobal) {
-    cv::Mat Tcw = mpTracker->processImage(im, timeStamp, isGlobal);
+cv::Mat System::TrackCamera(const cv::Mat &im, const double &timeStamp, const bool &isGlobal, const bool UseBoW) {
+    cv::Mat Tcw = mpTracker->processImage(im, timeStamp, isGlobal, UseBoW);
     std::cout<<Tcw<<std::endl;
     return Tcw;
 }

@@ -27,9 +27,17 @@ Camera.cols: 752
 #--------------------------------------------------------------------------------------------
 # ORB Parameters
 #--------------------------------------------------------------------------------------------
+Initializer.iterations: 200
+Initializer.sigma: 1.0
+Initializer.minParallax: 0.5 #1.0
+Initializer.minTriangulated: 15 #50
+Initializer.bestNumberRate: 0.5
+Initializer.BestToSecondBest: 0.75
+Initializer.RHThreshold: 0.40
 
 # ORB Extractor: Number of features per image
-ORBextractor.nFeatures: 1000
+ORBextractor.nFeatures: 1500
+ORBextractor.globalFeatureNumberFactor: 1.5
 
 # ORB Extractor: Scale factor between levels in the scale pyramid 	
 ORBextractor.scaleFactor: 1.2

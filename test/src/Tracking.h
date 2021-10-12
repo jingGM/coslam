@@ -23,7 +23,7 @@ class Tracking {
 public:
     Tracking(System* pSys, ORBVocabulary* pVoc, const string &strSettingPath, bool draw);
 
-    cv::Mat processImage(const cv::Mat &im, const double &timestamp, const bool& isGlobalFrame);
+    cv::Mat processImage(const cv::Mat &im, const double &timestamp, const bool& isGlobalFrame, bool useBoW=true);
 
     enum eTrackingState{
         SYSTEM_NOT_READY=-1,
@@ -52,7 +52,7 @@ private:
     Frame mLastFrame;
     Frame mInitialFrame;
 
-    bool draw;
+    bool debug;
     Drawer drawer;
 
     std::vector<int> mvIniLastMatches;
@@ -80,13 +80,19 @@ private:
 
     // Initalization (only for monocular)
     Initializer* mpInitializer;
+    int moptimizeIterations;
+    float msigma;
+    float minParallax;
+    int minTriangulated;
+    float bestNumberRate;
+    float BestToSecondBest;
+    float RHThreshold;
 
     void initializeIntrinsics(const cv::FileStorage &fSettings);
     void initializeORBPrams(const cv::FileStorage &fSettings);
-    void matchFrames(const bool& isGlobalFrame);
+    void matchFrames(const bool& isGlobalFrame, bool useBoW);
     void initializeGlobal();
-    void processLocal();
-    void initializeDrawer();
+    void processLocal(bool useBoW);
 };
 
 

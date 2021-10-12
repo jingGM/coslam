@@ -35,6 +35,9 @@ public:
     bool PosInGrid(const cv::KeyPoint &kp, int &posX, int &posY);
     vector<size_t> GetFeaturesInArea(const float &x, const float  &y, const float  &r,
                                      int minLevel, int maxLevel) const;
+    void ComputeBoW();
+    std::vector<cv::Mat> toDescriptorVector(const cv::Mat &Descriptors);
+
 
     void SetPose(cv::Mat Tcw);
 

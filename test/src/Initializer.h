@@ -15,8 +15,14 @@ class Initializer {
     typedef pair<int,int> Match;
 public:
     explicit Initializer(const Frame &ReferenceFrame,
+                         bool debug=true,
                 float sigma = 1.0,
-                int iterations = 200);
+                int iterations = 200,
+                float minParallax=1.0,
+                int minTriangulated=20,//50,
+                float bestNumberRate=0.5,
+                float BestToSecondBest=0.75,
+                float RHThreshold=0.40);
 
     /**
      * @brief 计算基础矩阵和单应性矩阵，选取最佳的来恢复出最开始两帧之间的相对姿态，并进行三角化得到初始地图点
@@ -86,6 +92,13 @@ private:
 
     // 算Fundamental和Homography矩阵时 Ransac max iterations
     int mMaxIterations;
+
+    float minParallax;
+    int minTriangulated;
+    float bestNumberRate;
+    float BestToSecondBest;
+    float RHThreshold;
+    bool debug;
 
     /** 二维容器，外层容器的大小为迭代次数，内层容器大小为每次迭代算H或F矩阵需要的点,实际上是八对 */
     vector<vector<size_t> > mvSets;

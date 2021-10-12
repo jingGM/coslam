@@ -4,7 +4,19 @@
 
 #include "Initializer.h"
 
-Initializer::Initializer(const Frame &ReferenceFrame, float sigma, int iterations) {
+Initializer::Initializer(const Frame &ReferenceFrame,
+                         bool debug,
+                         float sigma,
+                         int iterations,
+                         float minParallax,
+                         int minTriangulated,
+                         float bestNumberRate,
+                         float BestToSecondBest,
+                         float RHThreshold):
+                         minParallax(minParallax),minTriangulated(minTriangulated),
+                         bestNumberRate(bestNumberRate),BestToSecondBest(BestToSecondBest),
+                         RHThreshold(RHThreshold), debug(debug)
+                         {
     //从参考帧中获取相机的内参数矩阵
     mK = ReferenceFrame.mK.clone();
 
@@ -144,7 +156,7 @@ bool Initializer::Initialize(const Frame &CurrentFrame, const vector<int> &vMatc
     threadH.join();
     threadF.join();
 
-    // TODO: for testing
+//    // TODO: for testing
 //    FindHomography(vbMatchesInliersH, SH, H);
 //    FindFundamental(vbMatchesInliersF, SF, F);
 
@@ -152,10 +164,12 @@ bool Initializer::Initialize(const Frame &CurrentFrame, const vector<int> &vMatc
     // Step 4 计算得分比例来判断选取哪个模型来求位姿R,t
     //通过这个规则来判断谁的评分占比更多一些，注意不是简单的比较绝对评分大小，而是看评分的占比
     float RH = SH/(SH+SF);			//RH=Ratio of Homography
+    if(debug)
+    std::cout<< "SHFR: "<< SH <<" / "<< SF << " / " << RH<<std::endl;
 
     // Try to reconstruct from homography or fundamental depending on the ratio (0.40-0.45)
     // 注意这里更倾向于用H矩阵恢复位姿。如果单应矩阵的评分占比达到了0.4以上,则从单应矩阵恢复运动,否则从基础矩阵恢复运动
-    if(RH>0.40)
+    if(RH>RHThreshold)
         //更偏向于平面，此时从单应矩阵恢复，函数ReconstructH返回bool型结果
         return ReconstructH(vbMatchesInliersH,	//输入，匹配成功的特征点对Inliers标记
                             H,					//输入，前面RANSAC计算后的单应矩阵
@@ -163,12 +177,12 @@ bool Initializer::Initialize(const Frame &CurrentFrame, const vector<int> &vMatc
                             R21,t21,			//输出，计算出来的相机从参考帧1到当前帧2所发生的旋转和位移变换
                             vP3D,				//特征点对经过三角测量之后的空间坐标，也就是地图点
                             vbTriangulated,		//特征点对是否成功三角化的标记
-                            1.0,				//这个对应的形参为minParallax，即认为某对特征点的三角化测量中，认为其测量有效时
+                            minParallax,				//这个对应的形参为minParallax，即认为某对特征点的三角化测量中，认为其测量有效时
                 //需要满足的最小视差角（如果视差角过小则会引起非常大的观测误差）,单位是角度
-                            50);				//为了进行运动恢复，所需要的最少的三角化测量成功的点个数
+                            minTriangulated);				//为了进行运动恢复，所需要的最少的三角化测量成功的点个数
     else //if(pF_HF>0.6)
         // 更偏向于非平面，从基础矩阵恢复
-        return ReconstructF(vbMatchesInliersF,F,mK,R21,t21,vP3D,vbTriangulated,1.0,50);
+        return ReconstructF(vbMatchesInliersF,F,mK,R21,t21,vP3D,vbTriangulated,minParallax,minTriangulated);
 
     //一般地程序不应该执行到这里，如果执行到这里说明程序跑飞了
     return false;
@@ -217,6 +231,7 @@ void Initializer::FindHomography(vector<bool> &vbMatchesInliers, float &score, c
 
     // Perform all RANSAC iterations and save the solution with highest score
     //下面进行每次的RANSAC迭代
+//    std::cout<< "==================================================="<<std::endl;
     for(int it=0; it<mMaxIterations; it++)
     {
         // Select a minimum set
@@ -252,6 +267,7 @@ void Initializer::FindHomography(vector<bool> &vbMatchesInliers, float &score, c
                                        vbCurrentInliers, 	//输出，特征点对的Inliers标记
                                        mSigma);				//TODO  测量误差，在Initializer类对象构造的时候，由外部给定的
 
+//        std::cout<<currentScore<<std::endl;
         // Step 5 更新具有最优评分的单应矩阵计算结果,并且保存所对应的特征点对的内点标记
         if(currentScore>score)
         {
@@ -263,6 +279,7 @@ void Initializer::FindHomography(vector<bool> &vbMatchesInliers, float &score, c
             score = currentScore;
         }
     }
+//    std::cout<< "----------------------------------------------------"<<std::endl;
 }
 
 /**
@@ -913,7 +930,6 @@ float Initializer::CheckFundamental(
 bool Initializer::ReconstructH(vector<bool> &vbMatchesInliers, cv::Mat &H21, cv::Mat &K,
                                cv::Mat &R21, cv::Mat &t21, vector<cv::Point3f> &vP3D, vector<bool> &vbTriangulated, float minParallax, int minTriangulated)
 {
-
     // 目的 ：通过单应矩阵H恢复两帧图像之间的旋转矩阵R和平移向量T
     // 参考 ：Motion and structure from motion in a piecewise plannar environment.
     //        International Journal of Pattern Recognition and Artificial Intelligence, 1988
@@ -1191,10 +1207,16 @@ bool Initializer::ReconstructH(vector<bool> &vbMatchesInliers, cv::Mat &H21, cv:
     // 2. 视角差大于规定的阈值
     // 3. good点数要大于规定的最小的被三角化的点数量
     // 4. good数要足够多，达到总数的90%以上
-    if(secondBestGood<0.75*bestGood &&
-       bestParallax>=minParallax &&
+    if(debug)
+    std::cout<<"values: "<<secondBestGood<<"/"<<BestToSecondBest*bestGood<<
+    " | "<<bestParallax<<" | "<<bestGood<<"/"<<bestNumberRate*N<<std::endl;
+//    if(secondBestGood<BestToSecondBest*bestGood &&
+//       bestParallax>=minParallax &&
+//       bestGood>minTriangulated &&
+//       bestGood>bestNumberRate*N)
+    if(bestParallax>=minParallax &&
        bestGood>minTriangulated &&
-       bestGood>0.9*N)
+       bestGood>bestNumberRate*N)
     {
         // 从最佳的解的索引访问到R，t
         vR[bestSolutionIdx].copyTo(R21);
@@ -1544,7 +1566,7 @@ bool Initializer::ReconstructF(vector<bool> &vbMatchesInliers, cv::Mat &F21, cv:
 
     // Step 4.3 确定最小的可以三角化的点数
     // 在0.9倍的内点数 和 指定值minTriangulated =50 中取最大的，也就是说至少50个
-    int nMinGood = max(static_cast<int>(0.9*N), minTriangulated);
+    int nMinGood = max(static_cast<int>(bestNumberRate*N), minTriangulated);
 
     // 统计四组解中重建的有效3D点个数 > 0.7 * maxGood 的解的数目
     // 如果有多个解同时满足该条件，认为结果太接近，nsimilar++，nsimilar>1就认为有问题了，后面返回false
@@ -1557,7 +1579,11 @@ bool Initializer::ReconstructF(vector<bool> &vbMatchesInliers, cv::Mat &F21, cv:
         nsimilar++;
     if(nGood4>0.7*maxGood)
         nsimilar++;
-
+    if(debug)
+    std::cout<<"goods: "<<nGood1<<"/"<<nGood2<<"/"<<nGood3<<"/"<<nGood4<<"|"
+            <<"maxGood: "<<maxGood<<"/"<<0.7*maxGood<<"|"
+            <<"minGood: "<<nMinGood<<"/"<<bestNumberRate*N<<"|"
+            <<"paralla: "<<parallax1<<"/"<<parallax2<<"/"<<parallax3<<"/"<<parallax4<<"/"<<minParallax<<std::endl;
     // Step 4.4 四个结果中如果没有明显的最优结果，或者没有足够数量的三角化点，则返回失败
     // 条件1: 如果四组解能够重建的最多3D点个数小于所要求的最少3D点个数（mMinGood），失败
     // 条件2: 如果存在两组及以上的解能三角化出 >0.7*maxGood的点，说明没有明显最优结果，失败

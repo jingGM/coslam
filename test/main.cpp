@@ -52,7 +52,9 @@ int main() {
     string imagePathG   = "/home/jing/Documents/catkinws/slam/src/coslam/test/dataset/test_set/global/global.png";
     string imagePathL   = "/home/jing/Documents/catkinws/slam/src/coslam/test/dataset/test_set/local";
     string pathTimes   = "/home/jing/Documents/catkinws/slam/src/coslam/test/dataset/test_set/MH01.txt";
-    string vocFile     = "/home/jing/Documents/catkinws/slam/src/coslam/test/dataset/ORBvoc_no.txt";
+
+//    string vocFile     = "/home/jing/Documents/catkinws/slam/src/coslam/test/dataset/ORBvoc_no.txt";
+    string vocFile     = "/home/jing/Documents/catkinws/slam/src/coslam/test/dataset/ORBvoc.txt";
     string settingFile = "/home/jing/Documents/catkinws/slam/src/coslam/test/dataset/test_set/EuRoC.yaml";
 
     vector<string> vstrImageFilenames;
@@ -65,11 +67,14 @@ int main() {
 
     System SLAM(vocFile,settingFile, true);
     double tframe = 0;
-    SLAM.TrackCamera(im,tframe, true);
+    SLAM.TrackCamera(im,tframe, true, false);
     for(int ni=0; ni<4; ni++) {
+        auto a= std::chrono::system_clock::now();
         im = cv::imread(vstrImageFilenames[ni], CV_LOAD_IMAGE_UNCHANGED);
         double tframe = vTimestamps[ni];
-        SLAM.TrackCamera(im,tframe, false);
+        SLAM.TrackCamera(im,tframe, false, true);
+        std::chrono::duration<double> b = std::chrono::system_clock::now() - a;
+        std::cout <<"TIME: "<< b.count() <<std::endl;
     }
 //    SLAM.Shutdown();
     return 0;
